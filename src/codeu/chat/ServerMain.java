@@ -21,6 +21,7 @@ import java.io.File;
 import codeu.chat.server.Server;
 import codeu.chat.util.Logger;
 import codeu.chat.util.RemoteAddress;
+import codeu.chat.util.SerializedExecutor;
 import codeu.chat.util.Uuid;
 import codeu.chat.util.connections.ClientConnectionSource;
 import codeu.chat.util.connections.Connection;
@@ -35,68 +36,66 @@ final class ServerMain {
 
     Logger.enableConsoleOutput();
 
+    int port = -1;
+
     try {
-      Logger.enableFileOutput("chat_server_log.log");
-    } catch (IOException ex) {
-      LOG.error(ex, "Failed to set logger to write to file");
+      port = Integer.parseInt(args[0]);
+    } catch (Exception ex) {
+      LOG.error(ex, "Failed to parse port from %s", args[0]);
+      System.exit(1);
     }
 
     LOG.info("============================= START OF LOG =============================");
 
-    int port = -1;
     // This is the directory where it is safe to store data accross runs
     // of the server.
     File persistentPath = null;
-    RemoteAddress relayAddress = null;
 
     try {
       port = Integer.parseInt(args[0]);
       persistentPath = new File(args[1]);
     } catch (Exception ex) {
-      LOG.error(ex, "Failed to read command arguments");
+      LOG.error(ex, "Failed to parse persistent path from %s", args[1]);
       System.exit(1);
     }
 
     if (!persistentPath.isDirectory()) {
-      LOG.error("%s does not exist", persistentPath);
+      LOG.error("Persistent path %s is not a directory", args[1]);
       System.exit(1);
     }
 
-    try (
-        final ConnectionSource serverSource = ServerConnectionSource.forPort(port);
-        final ConnectionSource relaySource = relayAddress == null ? null : new ClientConnectionSource(relayAddress.host, relayAddress.port)
-    ) {
-
-      LOG.info("Starting server...");
-      runServer(serverSource, relaySource);
-
-    } catch (IOException ex) {
-
-      LOG.error(ex, "Failed to establish connections");
-
-    }
-  }
-
-  private static void runServer(ConnectionSource serverSource,
-                                ConnectionSource relaySource) {
-
     final Server server = new Server();
+    LOG.verbose("Successfully create server instance");
 
-    LOG.info("Created server.");
-
-    while (true) {
-
-      try {
-
-        LOG.info("Established connection...");
-        final Connection connection = serverSource.connect();
-        LOG.info("Connection established.");
-
-        server.handleConnection(connection);
-
-      } catch (IOException ex) {
-        LOG.error(ex, "Failed to establish connection.");
+    final SerializedExecutor<Connection> executor = new SerializedExecutor<Connection>() {
+      @Override
+      public void onValue(Connection value) {
+        try {
+          server.handleConnection(value);
+        } catch (Exception ex) {
+          LOG.error(ex, "Unhandled exception while handling connection");
+        }
       }
+    };
+
+    // Start the executor on a new thread. As there is no clean way to end the server and there will
+    // be no way shutdown the executor, there is no reason to keep a reference to the thread.
+    new Thread(executor).start();
+
+    try (final ConnectionSource serverSource = ServerConnectionSource.forPort(port)) {
+
+      LOG.verbose("Bound to port %d", port);
+
+      while (true) {
+        try {
+          executor.add(serverSource.connect());
+          LOG.verbose("Connection established.");
+        } catch (IOException ex) {
+          LOG.error(ex, "Failed to connect to incoming connection");
+        }
+      }
+    } catch (IOException ex) {
+      LOG.error(ex, "Failed to bind to port %d", port);
     }
   }
 }
