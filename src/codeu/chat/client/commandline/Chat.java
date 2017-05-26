@@ -24,6 +24,8 @@ import codeu.chat.client.core.ConversationContext;
 import codeu.chat.client.core.MessageContext;
 import codeu.chat.client.core.UserContext;
 
+import codeu.chat.common.ServerInfo;
+
 public final class Chat {
 
   // PANELS
@@ -179,6 +181,18 @@ public final class Chat {
         }
         return null;
       }
+    });
+
+    panel.register("info", new Panel.Command() {
+      @Override
+      public void invoke(Scanner args) {
+        final ServerInfo info = context.getInfo();
+        if (info == null) {
+          System.out.println("ERROR: Failed to access server info");
+        } else {
+          System.out.format("Version: UUID:%s\n", info.version);
+        }
+      } 
     });
 
     // Now that the panel has all its commands registered, return the panel
