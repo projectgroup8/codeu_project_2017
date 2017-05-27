@@ -212,6 +212,7 @@ public final class Server {
           if (type == NetworkCode.SERVER_INFO_REQUEST) {
             Serializers.INTEGER.write(connection.out(), NetworkCode.SERVER_INFO_RESPONSE);
             Uuid.SERIALIZER.write(connection.out(), info.version);
+            Time.SERIALIZER.write(connection.out(), info.startTime);
           }
 
           if (command == null) {

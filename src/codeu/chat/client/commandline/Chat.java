@@ -188,12 +188,12 @@ public final class Chat {
 
     panel.register("info", new Panel.Command() {
       @Override
-      public void invoke(Scanner args) {
+      public void invoke(List<String> args) {
         final ServerInfo info = context.getInfo();
         if (info == null) {
           System.out.println("ERROR: Failed to access server info");
         } else {
-          System.out.format("Version: UUID:%s\n", info.version);
+          System.out.format("Version: UUID:%s\nUptime: %s\n", info.version, info.startTime);
         }
       } 
     });
