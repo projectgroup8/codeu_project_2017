@@ -45,8 +45,7 @@ CONFIG = {
   'src' : [ 'src', 'test' ],
   'libraries' : [
     'third_party/junit4-4.11.jar',
-    'third_party/hamcrest-core-1.3.jar',
-    'third_party/gson-2.8.1.jar'
+    'third_party/hamcrest-core-1.3.jar'
   ],
   'separators' : {
     'nt' : ';',
