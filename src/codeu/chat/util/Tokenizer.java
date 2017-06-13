@@ -2,17 +2,13 @@ package codeu.chat.util;
 
 import java.io.IOException;
 
-/**
- * Created by daaaavid on 5/19/17.
- */
 public final class Tokenizer {
 
     private StringBuilder token;
     private String source;
     private int at;
 
-
-    public Tokenizer(String source){
+    public Tokenizer(String source) {
         this.source = source;
         token = new StringBuilder();
     }
@@ -36,6 +32,7 @@ public final class Tokenizer {
     private int remaining() {
         return source.length() - at;
     }
+
     private char peek() throws IOException {
         if (at < source.length()) {
             return source.charAt(at);
@@ -44,6 +41,7 @@ public final class Tokenizer {
             // throw an exception
         }
     }
+    
     private char read() throws IOException {
         final char c = peek();
         at += 1;
