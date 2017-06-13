@@ -47,13 +47,4 @@ public class TransactionLogger {
 			System.out.println("IO Exception writing transaction log: " + ioe.getMessage());
 		}
 	}
-
-	/* for testing purposes
-	public static void main(String[] args) {
-		TransactionLogger e = new TransactionLogger();
-		HashMap<String, Object> addUser = new HashMap<String, Object>();
-		addUser.put("action", "ADD-USER");
-		addUser.put("focus-uuid", 100);
-		e.log(addUser);
-	}*/
 }
