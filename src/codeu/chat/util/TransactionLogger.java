@@ -1,9 +1,12 @@
 //package codeu.chat.util;
 
 import java.util.LinkedList;
+import java.util.HashMap;
 import java.lang.System;
 import java.io.FileWriter;
 import java.io.IOException;
+
+import org.json.simple.JSONObject;
 
 public class TransactionLogger {
 
@@ -15,16 +18,17 @@ public class TransactionLogger {
 		lastWrite = System.currentTimeMillis();
 	}
 
-	public void logAddUser() {
-		log("Add user");
-	}
-
 	// All log writes pass through this function
 	// Checks whether queue to file is needed
-	public void log(String transaction) {
-		toLog.add(transaction);
+	public void log(HashMap<String,Object> transaction) {
+		JSONObject jsonTransaction = new JSONObject();
+		jsonTransaction.putAll(transaction);
+		String strTransaction = transaction.toString();
+		System.out.printf("JSON %s", transaction.toString() );
+
+		toLog.add(strTransaction);
 		long now = System.currentTimeMillis();
-		if (now-lastWrite > 120000) { //two minutes
+		if (now-lastWrite > 0) { //two minutes
 			System.out.println(now-lastWrite);
 			appendToLog();
 			lastWrite = now;
@@ -48,6 +52,9 @@ public class TransactionLogger {
 
 	public static void main(String[] args) {
 		TransactionLogger e = new TransactionLogger();
-		e.logAddUser();
+		HashMap<String, Object> addUser = new HashMap<String, Object>();
+		addUser.put("action", "ADD-USER");
+		addUser.put("focus-uuid", 100);
+		e.log(addUser);
 	}
 }
