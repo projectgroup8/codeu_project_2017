@@ -1,12 +1,12 @@
-//package codeu.chat.util;
+package codeu.chat.util;
+
+import com.google.gson.Gson;
 
 import java.util.LinkedList;
 import java.util.HashMap;
 import java.lang.System;
 import java.io.FileWriter;
 import java.io.IOException;
-
-import org.json.simple.JSONObject;
 
 public class TransactionLogger {
 
@@ -21,14 +21,12 @@ public class TransactionLogger {
 	// All log writes pass through this function
 	// Checks whether queue to file is needed
 	public void log(HashMap<String,Object> transaction) {
-		JSONObject jsonTransaction = new JSONObject();
-		jsonTransaction.putAll(transaction);
-		String strTransaction = transaction.toString();
-		System.out.printf("JSON %s", transaction.toString() );
+		// create Json string of transaction
+		String strTransaction = new Gson().toJson(transaction);
 
-		toLog.add(strTransaction);
+		toLog.add(strTransaction); //add to queue
 		long now = System.currentTimeMillis();
-		if (now-lastWrite > 0) { //two minutes
+		if (now-lastWrite > 120000) { //don't write within 2 minutes
 			System.out.println(now-lastWrite);
 			appendToLog();
 			lastWrite = now;
@@ -50,11 +48,12 @@ public class TransactionLogger {
 		}
 	}
 
+	/* for testing purposes
 	public static void main(String[] args) {
 		TransactionLogger e = new TransactionLogger();
 		HashMap<String, Object> addUser = new HashMap<String, Object>();
 		addUser.put("action", "ADD-USER");
 		addUser.put("focus-uuid", 100);
 		e.log(addUser);
-	}
+	}*/
 }
