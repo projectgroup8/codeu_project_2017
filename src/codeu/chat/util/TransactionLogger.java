@@ -10,7 +10,7 @@ import java.io.IOException;
 
 public class TransactionLogger {
 
-	private LinkedList<String> toLog;
+	private LinkedList<String> toLog; //Implements Queue
 	private long lastWrite;
 
 	public TransactionLogger() {
@@ -20,11 +20,9 @@ public class TransactionLogger {
 
 	// All log writes pass through this function
 	// Checks whether queue to file is needed
-	public void log(HashMap<String,Object> transaction) {
-		// create Json string of transaction
-		String strTransaction = new Gson().toJson(transaction);
-
-		toLog.add(strTransaction); //add to queue
+	// transaction: String already made by Gson
+	public void log(String transaction) {
+		toLog.add(transaction); //add to queue
 		long now = System.currentTimeMillis();
 		if (now-lastWrite > 120000) { //don't write within 2 minutes
 			System.out.println(now-lastWrite);
@@ -37,7 +35,7 @@ public class TransactionLogger {
 	public void appendToLog() {
 		try {
 			String logFile = "transactionLog.txt";
-			FileWriter fw = new FileWriter(logFile,true);
+			FileWriter fw = new FileWriter(logFile,true /*append*/);
 			for (int i=0; i<toLog.size(); i++) {
 				fw.write(toLog.pop());
 				fw.write("\n");
