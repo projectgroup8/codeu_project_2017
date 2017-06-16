@@ -23,6 +23,8 @@ import codeu.chat.client.core.MessageContext;
 import codeu.chat.client.core.UserContext;
 import codeu.chat.util.Tokenizer;
 
+import codeu.chat.common.ServerInfo;
+
 public final class Chat {
 
   // PANELS
@@ -182,6 +184,18 @@ public final class Chat {
         }
         return null;
       }
+    });
+
+    panel.register("info", new Panel.Command() {
+      @Override
+      public void invoke(List<String> args) {
+        final ServerInfo info = context.getInfo();
+        if (info == null) {
+          System.out.println("ERROR: Failed to access server info");
+        } else {
+          System.out.format("Version: UUID:%s\nUptime: %s\n", info.version, info.startTime);
+        }
+      } 
     });
 
     // Now that the panel has all its commands registered, return the panel
