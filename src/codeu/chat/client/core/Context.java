@@ -26,7 +26,7 @@ import codeu.chat.util.connections.ConnectionSource;
 
 public final class Context {
 
-  private final BasicView view;
+  private final View view;
   private final Controller controller;
 
   public Context(ConnectionSource source) {
@@ -50,6 +50,6 @@ public final class Context {
   }
 
   public ServerInfo getInfo() {
-    return ((View) view).getInfo();
+    return view.getInfo();
   }
 }

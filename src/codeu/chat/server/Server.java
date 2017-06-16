@@ -51,6 +51,8 @@ public final class Server {
 
   private static final int RELAY_REFRESH_MS = 5000;  // 5 seconds
 
+  private static final ServerInfo info = new ServerInfo();
+
   private final Timeline timeline = new Timeline();
 
   private final Map<Integer, Command> commands = new HashMap<>();
@@ -64,8 +66,6 @@ public final class Server {
 
   private final Relay relay;
   private Uuid lastSeen = Uuid.NULL;
-
-  private static final ServerInfo info = new ServerInfo();
 
   public Server(final Uuid id, final Secret secret, final Relay relay) {
 

@@ -5,13 +5,10 @@ import codeu.chat.util.Time;
 
 public final class ServerInfo {
   private final static String SERVER_VERSION = "1.0.0";
-
   public final Time startTime;
-
   public Uuid version;
 
   public ServerInfo() {
-
     this.startTime = Time.now();
 
     try {
