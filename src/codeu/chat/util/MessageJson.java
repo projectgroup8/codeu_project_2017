@@ -3,10 +3,10 @@ package codeu.chat.util;
 import codeu.chat.common.Message;
 
 public class MessageJson extends TransactionJson {
-  String previous;
-  String author;
-  String content;
-  String next;
+  public String previous;
+  public String author;
+  public String content;
+  public String next;
 
   public MessageJson(String action, Message message) {
     super.action = action;
