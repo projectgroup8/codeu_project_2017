@@ -179,4 +179,8 @@ public final class Controller implements RawController, BasicController {
 
   private boolean isIdFree(Uuid id) { return !isIdInUse(id); }
 
+  public void deserializeCommands(){
+      transactionLogger.readLog(model);
+  }
+
 }
