@@ -26,10 +26,12 @@ import codeu.chat.common.User;
 import codeu.chat.util.Logger;
 import codeu.chat.util.Time;
 import codeu.chat.util.Uuid;
+import codeu.chat.util.TransactionLogger;
 
 public final class Controller implements RawController, BasicController {
 
   private final static Logger.Log LOG = Logger.newLog(Controller.class);
+  private final static TransactionLogger transactionLogger = new TransactionLogger();
 
   private final Model model;
   private final Uuid.Generator uuidGenerator;
@@ -67,6 +69,9 @@ public final class Controller implements RawController, BasicController {
       message = new Message(id, Uuid.NULL, Uuid.NULL, creationTime, author, body);
       model.add(message);
       LOG.info("Message added: %s", message.id);
+
+      transactionLogger.addMessage(message);
+      transactionLogger.appendToLog();
 
       // Find and update the previous "last" message so that it's "next" value
       // will point to the new message.
@@ -115,6 +120,8 @@ public final class Controller implements RawController, BasicController {
           name,
           creationTime);
 
+      transactionLogger.addUser(user);
+      transactionLogger.appendToLog();
     } else {
 
       LOG.info(
@@ -137,7 +144,11 @@ public final class Controller implements RawController, BasicController {
     if (foundOwner != null && isIdFree(id)) {
       conversation = new ConversationHeader(id, owner, creationTime, title);
       model.add(conversation);
+
       LOG.info("Conversation added: " + id);
+
+      transactionLogger.addConversation(conversation);
+      transactionLogger.appendToLog();
     }
 
     return conversation;
