@@ -4,6 +4,9 @@ import codeu.chat.server.Model;
 import com.google.gson.Gson;
 
 import java.io.*;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.LinkedList;
 import java.lang.System;
 
@@ -44,28 +47,55 @@ public class TransactionLogger {
 
     // methods to deserialze commands.
     public User getUser(JsonObject jsonObject){
-        Uuid id = new Uuid(Integer.parseInt(jsonObject.get("uuid").toString()));
-        String name = jsonObject.get("name").toString();
-        Time creation = new Time(Long.parseLong(jsonObject.get("creation").toString()));
-        return new User(id, name, creation);
+        try {
+            Uuid id = Uuid.parse(jsonObject.get("uuid").getAsString());
+            String name = jsonObject.get("name").getAsString();
+
+            SimpleDateFormat formatter = new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss.SSS");
+            Time creation = Time.fromMs(formatter.parse(jsonObject.get("creation").getAsString()).getTime());
+            return new User(id, name, creation);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     public ConversationHeader getConversation(JsonObject jsonObject){
-        Uuid id = new Uuid(Integer.parseInt(jsonObject.get("uuid").toString()));
-        Uuid owner = new Uuid(Integer.parseInt(jsonObject.get("owner").toString()));
-        Time creation = new Time(Long.parseLong(jsonObject.get("creation").toString()));
-        String title = jsonObject.get("title").toString();
-	    return new ConversationHeader(id, owner, creation, title);
+        try {
+            Uuid id = Uuid.parse(jsonObject.get("uuid").getAsString());
+            Uuid owner = Uuid.parse(jsonObject.get("owner").getAsString());
+
+            SimpleDateFormat formatter = new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss.SSS");
+            Time creation = Time.fromMs(formatter.parse(jsonObject.get("creation").getAsString()).getTime());
+            String title = jsonObject.get("title").getAsString();
+            return new ConversationHeader(id, owner, creation, title);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     public Message getMessage(JsonObject jsonObject){
-        Uuid id = new Uuid(Integer.parseInt(jsonObject.get("uuid").toString()));
-        Uuid next = new Uuid(Integer.parseInt(jsonObject.get("next").toString()));
-        Uuid previous = new Uuid(Integer.parseInt(jsonObject.get("previous").toString()));
-        Time creation = new Time(Long.parseLong(jsonObject.get("creation").toString()));
-        Uuid author = new Uuid(Integer.parseInt(jsonObject.get("author").toString()));
-        String content = jsonObject.get("content").toString();
-        return new Message(id, next, previous, creation, author, content);
+        try {
+            Uuid id = Uuid.parse(jsonObject.get("uuid").getAsString());
+            Uuid next = Uuid.parse(jsonObject.get("next").getAsString());
+            Uuid previous = Uuid.parse(jsonObject.get("previous").getAsString());
+
+            SimpleDateFormat formatter = new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss.SSS");
+            Time creation = Time.fromMs(formatter.parse(jsonObject.get("creation").getAsString()).getTime());
+            Uuid author = Uuid.parse(jsonObject.get("author").getAsString());
+            String content = jsonObject.get("content").getAsString();
+            return new Message(id, next, previous, creation, author, content);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
 
@@ -106,7 +136,7 @@ public class TransactionLogger {
                     Gson gson = new Gson();
                     JsonObject jsonObject = gson.fromJson(line, JsonObject.class);
                     // find what kind of command it is and execute it.
-                    String action = jsonObject.get("action").toString();
+                    String action = jsonObject.get("action").getAsString();
                     if ("ADD-USER".equals(action)) {
                         model.add(getUser(jsonObject));
                     }
