@@ -137,14 +137,18 @@ public class TransactionLogger {
                     JsonObject jsonObject = gson.fromJson(line, JsonObject.class);
                     // find what kind of command it is and execute it.
                     String action = jsonObject.get("action").getAsString();
-                    if ("ADD-USER".equals(action)) {
-                        model.add(getUser(jsonObject));
-                    }
-                    else if ("ADD-CONVERSATION".equals(action)) {
-                        model.add(getConversation(jsonObject));
-                    }
-                    else if ("ADD-MESSAGE".equals(action)) {
-                        model.add(getMessage(jsonObject));
+                    switch(action){
+                        case "ADD-USER":
+                            model.add(getUser(jsonObject));
+                            break;
+                        case "ADD-CONVERSATION":
+                            model.add(getConversation(jsonObject));
+                            break;
+                        case "ADD-MESSAGE":
+                            model.add(getMessage(jsonObject));
+                            break;
+                        default: break;
+
                     }
                 }
             } catch (IOException e) {
