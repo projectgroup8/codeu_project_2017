@@ -10,6 +10,7 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.lang.System;
 
+import codeu.chat.util.Uuid;
 import codeu.chat.common.User;
 import codeu.chat.common.ConversationHeader;
 import codeu.chat.common.Message;
@@ -34,13 +35,13 @@ public class TransactionLogger {
   }
 
   public void addConversation(ConversationHeader conversation) {
-    ConversationJson convJson = new ConversationJson("ADD-CONVERSATION", conversation);
+    ConversationJson conversationJson = new ConversationJson("ADD-CONVERSATION", conversation);
     Gson gson = new Gson();
-    log(gson.toJson(convJson));
+    log(gson.toJson(conversationJson));
   }
 
-  public void addMessage(Message message) {
-    MessageJson messageJson = new MessageJson("ADD-MESSAGE", message);
+  public void addMessage(Uuid conversation, Message message) {
+    MessageJson messageJson = new MessageJson("ADD-MESSAGE", conversation, message);
     Gson gson = new Gson();
     log(gson.toJson(messageJson));  
   }

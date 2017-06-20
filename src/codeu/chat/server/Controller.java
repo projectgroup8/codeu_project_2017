@@ -70,7 +70,7 @@ public final class Controller implements RawController, BasicController {
       model.add(message);
       LOG.info("Message added: %s", message.id);
 
-      transactionLogger.addMessage(message);
+      transactionLogger.addMessage(conversation, message);
       transactionLogger.appendToLog();
 
       // Find and update the previous "last" message so that it's "next" value
