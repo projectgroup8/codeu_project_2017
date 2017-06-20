@@ -1,16 +1,14 @@
 package codeu.chat.util;
 
-import codeu.chat.server.Model;
+import codeu.chat.server.Controller;
 import com.google.gson.Gson;
 
 import java.io.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.LinkedList;
 import java.lang.System;
 
-import codeu.chat.util.Uuid;
 import codeu.chat.common.User;
 import codeu.chat.common.ConversationHeader;
 import codeu.chat.common.Message;
@@ -47,57 +45,51 @@ public class TransactionLogger {
   }
 
     // methods to deserialze commands.
-    public User getUser(JsonObject jsonObject){
+    public void retrieveUser(Controller controller, JsonObject jsonObject){
         try {
             Uuid id = Uuid.parse(jsonObject.get("uuid").getAsString());
             String name = jsonObject.get("name").getAsString();
-
             SimpleDateFormat formatter = new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss.SSS");
             Time creation = Time.fromMs(formatter.parse(jsonObject.get("creation").getAsString()).getTime());
-            return new User(id, name, creation);
+            controller.newUser(id, name, creation);
         } catch (IOException e) {
             e.printStackTrace();
         } catch (ParseException e) {
             e.printStackTrace();
         }
-        return null;
     }
 
-    public ConversationHeader getConversation(JsonObject jsonObject){
+    public void retrieveConversation(Controller controller, JsonObject jsonObject){
         try {
             Uuid id = Uuid.parse(jsonObject.get("uuid").getAsString());
             Uuid owner = Uuid.parse(jsonObject.get("owner").getAsString());
-
             SimpleDateFormat formatter = new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss.SSS");
             Time creation = Time.fromMs(formatter.parse(jsonObject.get("creation").getAsString()).getTime());
             String title = jsonObject.get("title").getAsString();
-            return new ConversationHeader(id, owner, creation, title);
+            controller.newConversation(id, title, owner, creation);
         } catch (IOException e) {
             e.printStackTrace();
         } catch (ParseException e) {
             e.printStackTrace();
         }
-        return null;
     }
 
-    public Message getMessage(JsonObject jsonObject){
+    public void retrieveMessage(Controller controller, JsonObject jsonObject){
         try {
             Uuid id = Uuid.parse(jsonObject.get("uuid").getAsString());
-            Uuid next = Uuid.parse(jsonObject.get("next").getAsString());
-            Uuid previous = Uuid.parse(jsonObject.get("previous").getAsString());
-
+            Uuid conversation = Uuid.parse(jsonObject.get("conversation").getAsString());
             SimpleDateFormat formatter = new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss.SSS");
             Time creation = Time.fromMs(formatter.parse(jsonObject.get("creation").getAsString()).getTime());
             Uuid author = Uuid.parse(jsonObject.get("author").getAsString());
             String content = jsonObject.get("content").getAsString();
-            return new Message(id, next, previous, creation, author, content);
+            controller.newMessage(id, author, conversation, content, creation);
         } catch (IOException e) {
             e.printStackTrace();
         } catch (ParseException e) {
             e.printStackTrace();
         }
-        return null;
     }
+
 
 
 	// All log writes pass through this function
@@ -129,7 +121,7 @@ public class TransactionLogger {
 	}
 
 	// Reads the transactions from the log and executes them.
-	public void readLog(Model model){
+	public void readLog(Controller controller){
         try {
             BufferedReader br = new BufferedReader(new FileReader("transactions.log"));
             try {
@@ -140,13 +132,13 @@ public class TransactionLogger {
                     String action = jsonObject.get("action").getAsString();
                     switch(action){
                         case "ADD-USER":
-                            model.add(getUser(jsonObject));
+                            retrieveUser(controller, jsonObject);
                             break;
                         case "ADD-CONVERSATION":
-                            model.add(getConversation(jsonObject));
+                            retrieveConversation(controller, jsonObject);
                             break;
                         case "ADD-MESSAGE":
-                            model.add(getMessage(jsonObject));
+                            retrieveMessage(controller, jsonObject);
                             break;
                         default: break;
 

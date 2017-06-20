@@ -14,7 +14,6 @@
 
 package codeu.chat.server;
 
-import java.util.Collection;
 
 import codeu.chat.common.BasicController;
 import codeu.chat.common.ConversationHeader;
@@ -32,6 +31,7 @@ public final class Controller implements RawController, BasicController {
 
   private final static Logger.Log LOG = Logger.newLog(Controller.class);
   private final static TransactionLogger transactionLogger = new TransactionLogger();
+  private static boolean retrieveOn = true;
 
   private final Model model;
   private final Uuid.Generator uuidGenerator;
@@ -70,8 +70,10 @@ public final class Controller implements RawController, BasicController {
       model.add(message);
       LOG.info("Message added: %s", message.id);
 
-      transactionLogger.addMessage(conversation, message);
-      transactionLogger.appendToLog();
+      if(!retrieveOn){
+        transactionLogger.addMessage(conversation, message);
+        transactionLogger.appendToLog();
+      }
 
       // Find and update the previous "last" message so that it's "next" value
       // will point to the new message.
@@ -120,8 +122,10 @@ public final class Controller implements RawController, BasicController {
           name,
           creationTime);
 
-      transactionLogger.addUser(user);
-      transactionLogger.appendToLog();
+      if(!retrieveOn){
+        transactionLogger.addUser(user);
+        transactionLogger.appendToLog();
+      }
     } else {
 
       LOG.info(
@@ -147,8 +151,10 @@ public final class Controller implements RawController, BasicController {
 
       LOG.info("Conversation added: " + id);
 
-      transactionLogger.addConversation(conversation);
-      transactionLogger.appendToLog();
+      if(!retrieveOn){
+          transactionLogger.addConversation(conversation);
+          transactionLogger.appendToLog();
+      }
     }
 
     return conversation;
@@ -180,7 +186,9 @@ public final class Controller implements RawController, BasicController {
   private boolean isIdFree(Uuid id) { return !isIdInUse(id); }
 
   public void deserializeCommands(){
-      transactionLogger.readLog(model);
+      retrieveOn = true; // tell the model we're retrieving stuff right now.
+      transactionLogger.readLog(this); // retrieve the data.
+      retrieveOn = false; // tell the model we're done retrieving data.
   }
 
 }
