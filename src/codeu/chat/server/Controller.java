@@ -31,7 +31,7 @@ public final class Controller implements RawController, BasicController {
 
   private final static Logger.Log LOG = Logger.newLog(Controller.class);
   private final static TransactionLogger transactionLogger = new TransactionLogger();
-  private static boolean retrieveOn = true;
+  private boolean retrieveOn = true;
 
   private final Model model;
   private final Uuid.Generator uuidGenerator;
