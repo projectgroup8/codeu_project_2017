@@ -3,7 +3,7 @@ package codeu.chat.util;
 import codeu.chat.common.User;
 
 public class UserJson extends TransactionJson {
-  public String name;
+  public final String name;
 
   public UserJson(String action, User user) {
     super.action = action;

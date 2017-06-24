@@ -80,6 +80,9 @@ public final class Server {
         final String content = Serializers.STRING.read(in);
 
         final Message message = controller.newMessage(author, conversation, content);
+        if(controller.isRetrieving()){
+          controller.saveMessage(message, conversation);
+        }
 
         Serializers.INTEGER.write(out, NetworkCode.NEW_MESSAGE_RESPONSE);
         Serializers.nullable(Message.SERIALIZER).write(out, message);
@@ -98,6 +101,12 @@ public final class Server {
 
         final String name = Serializers.STRING.read(in);
         final User user = controller.newUser(name);
+        if(controller.isRetrieving()){
+          // the user might be adding stuff while the logger is being read.
+          // so we need to temporarly save this new item and then log it when
+          // deserializing is finished.
+          controller.saveUser(user);
+        }
 
         Serializers.INTEGER.write(out, NetworkCode.NEW_USER_RESPONSE);
         Serializers.nullable(User.SERIALIZER).write(out, user);
@@ -112,6 +121,9 @@ public final class Server {
         final String title = Serializers.STRING.read(in);
         final Uuid owner = Uuid.SERIALIZER.read(in);
         final ConversationHeader conversation = controller.newConversation(title, owner);
+        if(controller.isRetrieving()){
+          controller.saveConversation(conversation);
+        }
 
         Serializers.INTEGER.write(out, NetworkCode.NEW_CONVERSATION_RESPONSE);
         Serializers.nullable(ConversationHeader.SERIALIZER).write(out, conversation);

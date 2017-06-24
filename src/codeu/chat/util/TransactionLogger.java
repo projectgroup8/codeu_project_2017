@@ -90,8 +90,6 @@ public class TransactionLogger {
         }
     }
 
-
-
 	// All log writes pass through this function
 	// Checks whether queue to file is needed
 	// transaction: String already made by Gson

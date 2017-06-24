@@ -100,7 +100,6 @@ final class ServerMain {
 
     // before running the server, we must first read from the logger.
     server.retrieveState();
-    LOG.info("Last saved state has been retrieved.");
 
     while (true) {
 

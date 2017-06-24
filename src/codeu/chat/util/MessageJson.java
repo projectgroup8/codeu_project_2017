@@ -4,9 +4,9 @@ import codeu.chat.util.Uuid;
 import codeu.chat.common.Message;
 
 public class MessageJson extends TransactionJson {
-  public String author;
-  public String content;
-  public String conversation;
+  public final String author;
+  public final String content;
+  public final String conversation;
 
   public MessageJson(String action, Uuid conversation, Message message) {
     super.action = action;
