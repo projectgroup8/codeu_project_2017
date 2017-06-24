@@ -34,11 +34,7 @@ import codeu.chat.common.Relay;
 import codeu.chat.common.Secret;
 import codeu.chat.common.User;
 import codeu.chat.common.ServerInfo;
-import codeu.chat.util.Logger;
-import codeu.chat.util.Serializers;
-import codeu.chat.util.Time;
-import codeu.chat.util.Timeline;
-import codeu.chat.util.Uuid;
+import codeu.chat.util.*;
 import codeu.chat.util.connections.Connection;
 
 public final class Server {
@@ -194,6 +190,17 @@ public final class Server {
         }
 
         timeline.scheduleIn(RELAY_REFRESH_MS, this);
+      }
+    });
+  }
+
+  // Reads from the log and executes the commands.
+  public void retrieveState() {
+    timeline.scheduleNow(new Runnable() { // add it to the execution queue.
+      @Override
+      public void run() {
+          LOG.info("Retrieving from last saved state...");
+          controller.deserializeCommands();
       }
     });
   }

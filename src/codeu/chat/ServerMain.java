@@ -96,8 +96,11 @@ final class ServerMain {
                         new RemoteRelay(relaySource);
 
     final Server server = new Server(id, secret, relay);
-
     LOG.info("Created server.");
+
+    // before running the server, we must first read from the logger.
+    server.retrieveState();
+    LOG.info("Last saved state has been retrieved.");
 
     while (true) {
 
