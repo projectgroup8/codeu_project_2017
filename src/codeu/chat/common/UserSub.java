@@ -1,5 +1,7 @@
 package codeu.chat.common;
 
+import codeu.chat.util.Uuid;
+
 public class UserSub implements Subscribable{
     private final User user;
 
@@ -9,5 +11,11 @@ public class UserSub implements Subscribable{
 
     public User getUser() {
         return user;
+    }
+
+
+    @Override
+    public Uuid getId() {
+        return user.id;
     }
 }

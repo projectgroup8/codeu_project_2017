@@ -1,5 +1,7 @@
 package codeu.chat.common;
 
+import codeu.chat.util.Uuid;
+
 public class ConvoSub implements Subscribable{
     private final ConversationHeader conversation;
 
@@ -9,5 +11,10 @@ public class ConvoSub implements Subscribable{
 
     public ConversationHeader getConversation(){
         return conversation;
+    }
+
+    @Override
+    public Uuid getId() {
+        return conversation.id;
     }
 }

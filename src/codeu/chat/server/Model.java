@@ -128,24 +128,26 @@ public final class Model {
   }
 
   // methods to handle subscriptions.
-  public void addUserSub(User user, UserSub sub){
-      if(!userSubscriptions.containsKey(sub)) {
-          userSubscriptions.put(sub, new HashSet<>());
-      }
-      userSubscriptions.get(sub).add(user);
-
+  public void addUserSubscription(User user, UserSub sub){
+    // this method adds a new User Subscription to the subscriptions map.
+    if(!userSubscriptions.containsKey(sub)) {
+        userSubscriptions.put(sub, new HashSet<>());
+    }
+    userSubscriptions.get(sub).add(user);
   }
 
-  public void addConvoSub(User user, ConvoSub sub){
-      if(!userSubscriptions.containsKey(sub)) {
-          userSubscriptions.put(sub, new HashSet<>());
-      }
-      userSubscriptions.get(sub).add(user);
+  public void addConversationSub(User user, ConvoSub sub){
+    // this method adds a new Conversation Subscription to the subscriptions map.
+    if(!userSubscriptions.containsKey(sub)) {
+        userSubscriptions.put(sub, new HashSet<>());
+    }
+    userSubscriptions.get(sub).add(user);
   }
 
   public void removeUserSub(User user, UserSub sub){
       if(userSubscriptions.get(sub).contains(user)){
           userSubscriptions.get(sub).remove(user);
+
       }
   }
   public void removeConvoSub(User user, ConvoSub sub){
@@ -154,44 +156,81 @@ public final class Model {
       }
   }
 
-  public void update(User user, Uuid conversation){
+  public HashSet<User> getUsersOfSub(Subscribable sub){
+    Subscribable s = getSubcriptionKey(sub);
+    if(s == null){
+      return new HashSet<User>();
+    }
+    else{
+      return userSubscriptions.get(s);
+    }
+  }
 
+
+  public Subscribable getSubcriptionKey(Subscribable sub){
+    for(Subscribable s: userSubscriptions.keySet()){
+      if(s.getId() == sub.getId()){
+        return s;
+      }
+    }
+    return null;
+  }
+
+  public Subscribable getSubcriptionKey(Uuid id){
+    for(Subscribable s: userSubscriptions.keySet()){
+      if(s.getId() == id){
+        return s;
+      }
+    }
+    return null;
+  }
+
+  public void update(User user, ConversationHeader conversation){
+    // This updates the subscribers of the user when a new message
+    // has been created from the user.
+
+    // first update the people that are following the user.
+    Subscribable subscription = getSubcriptionKey(user.id);
+    HashSet<User> users = getUsersOfSub(subscription);
+    if(users != null){
+      for(User u: users){
+        // update the subscribers that the user has added a new message to the conversation.
+        String update = ((UserSub) subscription).getUser().name + " has added a new message to conversation " + conversation.title;
+        userUpdates.get(u).add(new Update(update));
+      }
+    }
+
+    // now update the people that are following this conversation.
+    subscription = getSubcriptionKey(conversation.id);
+    users = getUsersOfSub(subscription);
+    if(users != null){
+      for(User u: users){
+        // update the subscribers that this conversation has a new unread message.
+        String update = "Conversation " + ((ConvoSub) subscription).getConversation().title + " has a new unread message";
+        userUpdates.get(u).add(new Update(update));
+      }
+    }
 
   }
 
-  public static void main(String[] args){
-    final HashMap<Subscribable, HashSet<User>> userSubscriptions = new HashMap<Subscribable, HashSet<User>>();
-    final HashMap<User, HashSet<Update>> userUpdates = new HashMap<User, HashSet<Update>>();
-
-    // Let's add Emma as a subscriber to James.
-
-    User james = new User(new Uuid(0), "james", Time.fromMs(0));
-    User emma = new User(new Uuid(0), "emma", Time.fromMs(0));
-    UserSub sub = new UserSub(james);
-
-    if(!userSubscriptions.containsKey(sub)) {
-      userSubscriptions.put(sub, new HashSet<>());
+  public void updateNewConversation(User user, ConversationHeader conversation){
+    // this updates the subscribers of the user when a new conversation has been
+    // created by that user.
+    HashSet<User> users = getUsersOfSub(getSubcriptionKey(user.id));
+    for(User u: users){
+      String update = "User " + user.name + " has created a new conversation " + conversation.title;
+      userUpdates.get(u).add(new Update(update));
     }
-    userSubscriptions.get(sub).add(emma); // emma is now following james.
-
-    System.out.println("has first usersub: " + userSubscriptions.containsKey(sub));
-
-    // let's add a new follower to james.
-
-    UserSub sub1 = new UserSub(james); // use james as the user for the userSub.
-    User david = new User(new Uuid(0), "david", Time.fromMs(0));
-
-    // this is where my issues lies:
-    // we always have to create a new subscription object when subscribing to things.
-    // so we actually can't use sub1 as the key for userSubscriptions.
-
-    if(!userSubscriptions.containsKey(sub1)) {
-      System.out.println("sub1 isn't the same as sub"); // this will be the output.
-      userSubscriptions.put(sub1, new HashSet<>());
-    }
-    else System.out.println("sub1 is the same as sub"); // but this what we want..
-
-    userSubscriptions.get(sub1).add(david);
   }
 
+  public HashSet<Update> getUpdates(User u){
+    // retrieves the updates for the user.
+    // we still have to iteratively match the uuids of the user with user u.
+    for(User user: userUpdates.keySet()){
+      if(u.id == user.id){
+        return userUpdates.get(u);
+      }
+    }
+    return null;
+  }
 }
