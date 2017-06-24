@@ -15,12 +15,10 @@
 package codeu.chat.server;
 
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 
-import codeu.chat.common.ConversationHeader;
-import codeu.chat.common.ConversationPayload;
-import codeu.chat.common.LinearUuidGenerator;
-import codeu.chat.common.Message;
-import codeu.chat.common.User;
+import codeu.chat.common.*;
 import codeu.chat.util.Time;
 import codeu.chat.util.Uuid;
 import codeu.chat.util.store.Store;
@@ -66,6 +64,9 @@ public final class Model {
   private final Store<Uuid, Message> messageById = new Store<>(UUID_COMPARE);
   private final Store<Time, Message> messageByTime = new Store<>(TIME_COMPARE);
   private final Store<String, Message> messageByText = new Store<>(STRING_COMPARE);
+
+  private final HashMap<Subscribable, HashSet<User>> userSubscriptions = new HashMap<Subscribable, HashSet<User>>();
+  private final HashMap<User, HashSet<Update>> userUpdates = new HashMap<User, HashSet<Update>>();
 
   public void add(User user) {
     userById.insert(user.id, user);
@@ -125,4 +126,72 @@ public final class Model {
   public StoreAccessor<String, Message> messageByText() {
     return messageByText;
   }
+
+  // methods to handle subscriptions.
+  public void addUserSub(User user, UserSub sub){
+      if(!userSubscriptions.containsKey(sub)) {
+          userSubscriptions.put(sub, new HashSet<>());
+      }
+      userSubscriptions.get(sub).add(user);
+
+  }
+
+  public void addConvoSub(User user, ConvoSub sub){
+      if(!userSubscriptions.containsKey(sub)) {
+          userSubscriptions.put(sub, new HashSet<>());
+      }
+      userSubscriptions.get(sub).add(user);
+  }
+
+  public void removeUserSub(User user, UserSub sub){
+      if(userSubscriptions.get(sub).contains(user)){
+          userSubscriptions.get(sub).remove(user);
+      }
+  }
+  public void removeConvoSub(User user, ConvoSub sub){
+      if(userSubscriptions.get(sub).contains(user)){
+          userSubscriptions.get(sub).remove(user);
+      }
+  }
+
+  public void update(User user, Uuid conversation){
+
+
+  }
+
+  public static void main(String[] args){
+    final HashMap<Subscribable, HashSet<User>> userSubscriptions = new HashMap<Subscribable, HashSet<User>>();
+    final HashMap<User, HashSet<Update>> userUpdates = new HashMap<User, HashSet<Update>>();
+
+    // Let's add Emma as a subscriber to James.
+
+    User james = new User(new Uuid(0), "james", Time.fromMs(0));
+    User emma = new User(new Uuid(0), "emma", Time.fromMs(0));
+    UserSub sub = new UserSub(james);
+
+    if(!userSubscriptions.containsKey(sub)) {
+      userSubscriptions.put(sub, new HashSet<>());
+    }
+    userSubscriptions.get(sub).add(emma); // emma is now following james.
+
+    System.out.println("has first usersub: " + userSubscriptions.containsKey(sub));
+
+    // let's add a new follower to james.
+
+    UserSub sub1 = new UserSub(james); // use james as the user for the userSub.
+    User david = new User(new Uuid(0), "david", Time.fromMs(0));
+
+    // this is where my issues lies:
+    // we always have to create a new subscription object when subscribing to things.
+    // so we actually can't use sub1 as the key for userSubscriptions.
+
+    if(!userSubscriptions.containsKey(sub1)) {
+      System.out.println("sub1 isn't the same as sub"); // this will be the output.
+      userSubscriptions.put(sub1, new HashSet<>());
+    }
+    else System.out.println("sub1 is the same as sub"); // but this what we want..
+
+    userSubscriptions.get(sub1).add(david);
+  }
+
 }
