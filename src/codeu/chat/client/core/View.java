@@ -23,6 +23,7 @@ import codeu.chat.common.ConversationPayload;
 import codeu.chat.common.Message;
 import codeu.chat.common.NetworkCode;
 import codeu.chat.common.User;
+import codeu.chat.common.Update;
 import codeu.chat.common.ServerInfo;
 import codeu.chat.util.Logger;
 import codeu.chat.util.Serializers;
@@ -136,6 +137,27 @@ final class View implements BasicView {
     }
 
     return messages;
+  }
+
+  @Override
+  public Collection<Update> getUpdates(Collection<Uuid> ids) {
+    final Collection<Update> updates = new ArrayList<>();
+
+    try (final Connection connection = source.connect()) {
+      Serializers.INTEGER.write(connection.out(), NetworkCode.GET_UPDATES_BY_ID_REQUEST);
+      Serializers.collection(Uuid.SERIALIZER).write(connection.out(), ids);
+
+      if (Serializers.INTEGER.read(connection.in()) == NetworkCode.GET_UPDATES_BY_ID_RESPONSE) {
+        updates.addAll(Serializers.collection(Update.SERIALIZER).read(connection.in()));
+      } else {
+        LOG.error("Response from server failed.");
+      }
+    } catch (Exception ex) {
+        System.out.println("ERROR: Exception during call on server. Check log for details.");
+        LOG.error(ex, "Exception during call on server.");
+    }
+
+    return updates;
   }
 
   public ServerInfo getInfo() {

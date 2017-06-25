@@ -228,9 +228,14 @@ public final class Model {
     // we still have to iteratively match the uuids of the user with user u.
     for(User user: userUpdates.keySet()){
       if(u.id == user.id){
+        System.out.println("Same ids!");
         return userUpdates.get(u);
       }
     }
-    return null;
+    /*HashSet<Update> test = new HashSet<Update>();
+    Update update = new Update("This is a test update.");
+    test.add(update);
+    return test;*/
+    return new HashSet<Update>();
   }
 }
