@@ -226,16 +226,17 @@ public final class Model {
   public HashSet<Update> getUpdates(User u){
     // retrieves the updates for the user.
     // we still have to iteratively match the uuids of the user with user u.
+
+    /* TEST UPDATE
+    HashSet<Update> map = new HashSet<Update>();
+    map.add(new Update("Test update"));
+    userUpdates.put(u, map);*/
+
     for(User user: userUpdates.keySet()){
       if(u.id == user.id){
-        System.out.println("Same ids!");
         return userUpdates.get(u);
       }
     }
-    /*HashSet<Update> test = new HashSet<Update>();
-    Update update = new Update("This is a test update.");
-    test.add(update);
-    return test;*/
     return new HashSet<Update>();
   }
 }
