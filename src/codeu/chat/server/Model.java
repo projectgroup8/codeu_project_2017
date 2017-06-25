@@ -91,6 +91,11 @@ public final class Model {
     conversationByTime.insert(conversation.creation, conversation);
     conversationByText.insert(conversation.title, conversation);
     conversationPayloadById.insert(conversation.id, new ConversationPayload(conversation.id));
+
+    //public void updateNewConversation(User user, ConversationHeader conversation){
+    // this updates the subscribers of the user when a new conversation has been
+    // created by that user.
+
   }
 
   public StoreAccessor<Uuid, ConversationHeader> conversationById() {
