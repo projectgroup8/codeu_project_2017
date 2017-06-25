@@ -34,11 +34,7 @@ import codeu.chat.common.Relay;
 import codeu.chat.common.Secret;
 import codeu.chat.common.User;
 import codeu.chat.common.ServerInfo;
-import codeu.chat.util.Logger;
-import codeu.chat.util.Serializers;
-import codeu.chat.util.Time;
-import codeu.chat.util.Timeline;
-import codeu.chat.util.Uuid;
+import codeu.chat.util.*;
 import codeu.chat.util.connections.Connection;
 
 public final class Server {
@@ -50,6 +46,8 @@ public final class Server {
   private static final Logger.Log LOG = Logger.newLog(Server.class);
 
   private static final int RELAY_REFRESH_MS = 5000;  // 5 seconds
+
+  private static final ServerInfo info = new ServerInfo();
 
   private final Timeline timeline = new Timeline();
 
@@ -64,8 +62,6 @@ public final class Server {
 
   private final Relay relay;
   private Uuid lastSeen = Uuid.NULL;
-
-  private static final ServerInfo info = new ServerInfo();
 
   public Server(final Uuid id, final Secret secret, final Relay relay) {
 
@@ -84,6 +80,9 @@ public final class Server {
         final String content = Serializers.STRING.read(in);
 
         final Message message = controller.newMessage(author, conversation, content);
+        if(controller.isRetrieving()){
+          controller.saveMessage(message, conversation);
+        }
 
         Serializers.INTEGER.write(out, NetworkCode.NEW_MESSAGE_RESPONSE);
         Serializers.nullable(Message.SERIALIZER).write(out, message);
@@ -102,6 +101,12 @@ public final class Server {
 
         final String name = Serializers.STRING.read(in);
         final User user = controller.newUser(name);
+        if(controller.isRetrieving()){
+          // the user might be adding stuff while the logger is being read.
+          // so we need to temporarly save this new item and then log it when
+          // deserializing is finished.
+          controller.saveUser(user);
+        }
 
         Serializers.INTEGER.write(out, NetworkCode.NEW_USER_RESPONSE);
         Serializers.nullable(User.SERIALIZER).write(out, user);
@@ -116,6 +121,9 @@ public final class Server {
         final String title = Serializers.STRING.read(in);
         final Uuid owner = Uuid.SERIALIZER.read(in);
         final ConversationHeader conversation = controller.newConversation(title, owner);
+        if(controller.isRetrieving()){
+          controller.saveConversation(conversation);
+        }
 
         Serializers.INTEGER.write(out, NetworkCode.NEW_CONVERSATION_RESPONSE);
         Serializers.nullable(ConversationHeader.SERIALIZER).write(out, conversation);
@@ -194,6 +202,17 @@ public final class Server {
         }
 
         timeline.scheduleIn(RELAY_REFRESH_MS, this);
+      }
+    });
+  }
+
+  // Reads from the log and executes the commands.
+  public void retrieveState() {
+    timeline.scheduleNow(new Runnable() { // add it to the execution queue.
+      @Override
+      public void run() {
+          LOG.info("Retrieving from last saved state...");
+          controller.deserializeCommands();
       }
     });
   }

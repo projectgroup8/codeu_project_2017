@@ -1,12 +1,5 @@
 package codeu.chat.util;
 
-/**
- * Created by daaaavid on 5/21/17.
- */
-//import org.testng.annotations.Test;
-
-
-
 import java.io.IOException;
 import static org.junit.Assert.*;
 import org.junit.Test;

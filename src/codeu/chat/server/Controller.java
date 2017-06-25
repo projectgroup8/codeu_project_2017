@@ -14,7 +14,6 @@
 
 package codeu.chat.server;
 
-import java.util.Collection;
 
 import codeu.chat.common.BasicController;
 import codeu.chat.common.ConversationHeader;
@@ -23,13 +22,17 @@ import codeu.chat.common.Message;
 import codeu.chat.common.RandomUuidGenerator;
 import codeu.chat.common.RawController;
 import codeu.chat.common.User;
-import codeu.chat.util.Logger;
-import codeu.chat.util.Time;
-import codeu.chat.util.Uuid;
+import codeu.chat.util.*;
+import com.google.gson.Gson;
+
+import java.util.LinkedList;
 
 public final class Controller implements RawController, BasicController {
 
   private final static Logger.Log LOG = Logger.newLog(Controller.class);
+  private final static TransactionLogger transactionLogger = new TransactionLogger();
+  private final LinkedList<TransactionJson> temporaryLog = new LinkedList<TransactionJson>();
+  private boolean retrieveOn = true;
 
   private final Model model;
   private final Uuid.Generator uuidGenerator;
@@ -67,6 +70,11 @@ public final class Controller implements RawController, BasicController {
       message = new Message(id, Uuid.NULL, Uuid.NULL, creationTime, author, body);
       model.add(message);
       LOG.info("Message added: %s", message.id);
+
+      if(!retrieveOn){
+        transactionLogger.addMessage(conversation, message);
+        transactionLogger.appendToLog();
+      }
 
       // Find and update the previous "last" message so that it's "next" value
       // will point to the new message.
@@ -115,6 +123,10 @@ public final class Controller implements RawController, BasicController {
           name,
           creationTime);
 
+      if(!retrieveOn){
+        transactionLogger.addUser(user);
+        transactionLogger.appendToLog();
+      }
     } else {
 
       LOG.info(
@@ -137,7 +149,13 @@ public final class Controller implements RawController, BasicController {
     if (foundOwner != null && isIdFree(id)) {
       conversation = new ConversationHeader(id, owner, creationTime, title);
       model.add(conversation);
+
       LOG.info("Conversation added: " + id);
+
+      if(!retrieveOn){
+          transactionLogger.addConversation(conversation);
+          transactionLogger.appendToLog();
+      }
     }
 
     return conversation;
@@ -167,5 +185,50 @@ public final class Controller implements RawController, BasicController {
   }
 
   private boolean isIdFree(Uuid id) { return !isIdInUse(id); }
+
+  public void saveUser(User user){
+    temporaryLog.add(new UserJson("ADD-USER", user));
+  }
+
+  public void saveConversation(ConversationHeader conversation){
+    temporaryLog.add(new ConversationJson("ADD-CONVERSATION", conversation));
+
+  }
+
+  public void saveMessage(Message message, Uuid conversation){
+    final ConversationPayload foundConversation = model.conversationPayloadById().first(conversation);
+    temporaryLog.add(new MessageJson("ADD-MESSAGE", foundConversation.id, message));
+  }
+
+  public void appendTransactions(){
+    for(TransactionJson json: temporaryLog){
+      Gson gson = new Gson();
+      if (json instanceof UserJson){
+        transactionLogger.log(gson.toJson(((UserJson)json)));
+        transactionLogger.appendToLog();
+      }
+      else if (json instanceof MessageJson){
+        transactionLogger.log(gson.toJson(((MessageJson)json)));
+        transactionLogger.appendToLog();
+      }
+      else if (json instanceof ConversationJson){
+        transactionLogger.log(gson.toJson(((ConversationJson)json)));
+        transactionLogger.appendToLog();
+      }
+    }
+  }
+
+  public boolean isRetrieving(){
+    return retrieveOn;
+  }
+
+  public void deserializeCommands(){
+    retrieveOn = true; // tell the model we're retrieving stuff right now.
+    transactionLogger.readLog(this); // retrieve the data.
+    retrieveOn = false; // tell the model we're done retrieving data.
+    LOG.info("Retrieving data has been completed.");
+    // now append stuff that might've not been appended because the log was being read.
+    appendTransactions();
+  }
 
 }
