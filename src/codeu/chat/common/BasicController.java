@@ -55,5 +55,5 @@ public interface BasicController {
 
   void newConversationSubscription(String title, Uuid user);
 
-  void clearUpdates(User user);
+  void clearUpdates(Uuid user);
 }

@@ -256,10 +256,10 @@ public final class Model {
     return new HashSet<Update>();
   }
 
-  public void clearUpdates(User u){
+  public void clearUpdates(Uuid id){
     for(User user: userUpdates.keySet()){
-      if(u.id == user.id){
-        userUpdates.get(u).clear();
+      if(id == user.id){
+        userUpdates.get(user).clear();
       }
     }
   }

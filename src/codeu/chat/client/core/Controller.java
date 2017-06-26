@@ -150,4 +150,22 @@ final class Controller implements BasicController {
       LOG.error(ex, "Exception during call on server.");
     } 
   }
+
+  @Override
+  public void clearUpdates(Uuid user) {
+    try (final Connection connection = source.connect()) {
+      Serializers.INTEGER.write(connection.out(), NetworkCode.CLEAR_UPDATES_REQUEST);
+      Uuid.SERIALIZER.write(connection.out(), user);
+      LOG.info("clearUpdates: Request completed.");
+
+      if (Serializers.INTEGER.read(connection.in()) == NetworkCode.CLEAR_UPDATES_RESPOND) {
+        LOG.info("clearUpdates: Response completed.");
+      } else {
+        LOG.error("Response from server failed.");
+      }
+    } catch (Exception ex) {
+      System.out.println("ERROR: Exception during call on server. Check log for details.");
+      LOG.error(ex, "Exception during call on server.");
+    }
+  }
 }
