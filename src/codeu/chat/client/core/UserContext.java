@@ -21,6 +21,7 @@ import codeu.chat.common.BasicController;
 import codeu.chat.common.BasicView;
 import codeu.chat.common.ConversationHeader;
 import codeu.chat.common.User;
+import codeu.chat.common.Update;
 import codeu.chat.util.Uuid;
 
 public final class UserContext {
@@ -54,6 +55,12 @@ public final class UserContext {
     return all;
   }
 
+  public Iterable<Update> updates() {
+    Collection<Uuid> ids = new ArrayList<>();
+    ids.add(user.id);
+    return view.getUpdates(ids);
+  }
+  
   public void userSubscribe(String name) {
     controller.newUserSubscription(name, user.id);  
   }

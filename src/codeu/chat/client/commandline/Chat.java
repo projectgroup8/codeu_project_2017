@@ -22,8 +22,8 @@ import codeu.chat.client.core.ConversationContext;
 import codeu.chat.client.core.MessageContext;
 import codeu.chat.client.core.UserContext;
 import codeu.chat.util.Tokenizer;
-
 import codeu.chat.common.ServerInfo;
+import codeu.chat.common.Update;
 
 public final class Chat {
 
@@ -223,6 +223,8 @@ public final class Chat {
         System.out.println("    Add a new conversation with the given title and join it as the current user.");
         System.out.println("  c-join <title>");
         System.out.println("    Join the conversation as the current user.");
+        System.out.println("  status-update");
+        System.out.println("    Get updates about subscriptions for the current user.");
         System.out.println("  u-subscribe <name>");
         System.out.println("    Subscribe to the user with the given name.");
         System.out.println("  c-subscribe <title>");
@@ -305,6 +307,20 @@ public final class Chat {
           }
         }
         return null;
+      }
+    });
+
+    panel.register("status-update", new Panel.Command() {
+      @Override
+      public void invoke(List<String> args) {
+        Iterator<Update> updates = user.updates().iterator();
+        if (!updates.hasNext()) {
+          System.out.println("No updates to be found.");
+        }
+
+        while (updates.hasNext()) {
+          System.out.println(updates.next().getUpdate());
+        }
       }
     });
 

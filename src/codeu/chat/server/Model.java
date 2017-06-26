@@ -91,6 +91,7 @@ public final class Model {
     conversationByTime.insert(conversation.creation, conversation);
     conversationByText.insert(conversation.title, conversation);
     conversationPayloadById.insert(conversation.id, new ConversationPayload(conversation.id));
+
   }
 
   public StoreAccessor<Uuid, ConversationHeader> conversationById() {
@@ -226,11 +227,12 @@ public final class Model {
   public HashSet<Update> getUpdates(User u){
     // retrieves the updates for the user.
     // we still have to iteratively match the uuids of the user with user u.
+
     for(User user: userUpdates.keySet()){
       if(u.id == user.id){
         return userUpdates.get(u);
       }
     }
-    return null;
+    return new HashSet<Update>();
   }
 }

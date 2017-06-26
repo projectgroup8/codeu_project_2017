@@ -79,6 +79,7 @@ public final class Controller implements RawController, BasicController {
       if(!retrieveOn){
         transactionLogger.addMessage(conversation, message);
         transactionLogger.appendToLog();
+        model.update(model.userById().first(author), model.conversationById().first(conversation));
       }
 
       // Find and update the previous "last" message so that it's "next" value
@@ -162,6 +163,7 @@ public final class Controller implements RawController, BasicController {
       if(!retrieveOn){
           transactionLogger.addConversation(conversation);
           transactionLogger.appendToLog();
+          model.updateNewConversation(model.userById().first(owner),conversation);
       }
     }
 
