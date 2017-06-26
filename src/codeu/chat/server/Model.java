@@ -177,7 +177,7 @@ public final class Model {
     return null;
   }
 
-  public Subscribable getSubcriptionKeyFromId(Uuid id){
+  public Subscribable getSubscriptionKeyFromId(Uuid id){
     for(Subscribable s: userSubscriptions.keySet()){
       if(s.getId() == id){
         return s;
@@ -191,7 +191,7 @@ public final class Model {
     // has been created from the user.
 
     // first update the people that are following the user.
-    Subscribable subscription = getSubcriptionKeyFromId(user.id);
+    Subscribable subscription = getSubscriptionKeyFromId(user.id);
     HashSet<User> users = new HashSet<User>();
     if(subscription != null){
       users = getUsersOfSub(subscription);
@@ -209,7 +209,7 @@ public final class Model {
     }
 
     // now update the people that are following this conversation.
-    subscription = getSubcriptionKeyFromId(conversation.id);
+    subscription = getSubscriptionKeyFromId(conversation.id);
     if(subscription != null){
       users = getUsersOfSub(subscription);
       if(users.size() != 0){
@@ -229,7 +229,7 @@ public final class Model {
   public void updateNewConversation(User user, ConversationHeader conversation){
     // this updates the subscribers of the user when a new conversation has been
     // created by that user.
-    Subscribable subscription = getSubcriptionKeyFromId(user.id);
+    Subscribable subscription = getSubscriptionKeyFromId(user.id);
     if(subscription != null){
       HashSet<User> users = getUsersOfSub(subscription);
       if(users.size() != 0){
