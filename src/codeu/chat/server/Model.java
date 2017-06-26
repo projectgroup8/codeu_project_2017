@@ -159,6 +159,7 @@ public final class Model {
 
   public HashSet<User> getUsersOfSub(Subscribable sub){
     Subscribable s = getSubcriptionKey(sub);
+    System.out.println("s: " + s);
     if(s == null){
       return new HashSet<User>();
     }
@@ -193,7 +194,7 @@ public final class Model {
     // first update the people that are following the user.
     Subscribable subscription = getSubcriptionKey(user.id);
     HashSet<User> users = getUsersOfSub(subscription);
-    if(users != null){
+    if(users.size() != 0){
       for(User u: users){
         // update the subscribers that the user has added a new message to the conversation.
         String update = ((UserSub) subscription).getUser().name + " has added a new message to conversation " + conversation.title;
@@ -204,7 +205,7 @@ public final class Model {
     // now update the people that are following this conversation.
     subscription = getSubcriptionKey(conversation.id);
     users = getUsersOfSub(subscription);
-    if(users != null){
+    if(users.size() != 0){
       for(User u: users){
         // update the subscribers that this conversation has a new unread message.
         String update = "Conversation " + ((ConvoSub) subscription).getConversation().title + " has a new unread message";
@@ -218,9 +219,11 @@ public final class Model {
     // this updates the subscribers of the user when a new conversation has been
     // created by that user.
     HashSet<User> users = getUsersOfSub(getSubcriptionKey(user.id));
-    for(User u: users){
-      String update = "User " + user.name + " has created a new conversation " + conversation.title;
-      userUpdates.get(u).add(new Update(update));
+    if(users.size() != 0){
+      for(User u: users){
+        String update = "User " + user.name + " has created a new conversation " + conversation.title;
+        userUpdates.get(u).add(new Update(update));
+      }
     }
   }
 
