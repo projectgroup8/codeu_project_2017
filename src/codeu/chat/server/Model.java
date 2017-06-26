@@ -208,6 +208,9 @@ public final class Model {
       for(User u: users){
         // update the subscribers that this conversation has a new unread message.
         String update = "Conversation " + ((ConvoSub) subscription).getConversation().title + " has a new unread message";
+        if(!userUpdates.containsKey(u)){
+          userUpdates.put(u, new HashSet<Update>());
+        }
         userUpdates.get(u).add(new Update(update));
       }
     }
@@ -221,6 +224,9 @@ public final class Model {
     if(users.size() != 0){
       for(User u: users){
         String update = "User " + user.name + " has created a new conversation " + conversation.title;
+        if(!userUpdates.containsKey(u)){
+          userUpdates.put(u, new HashSet<Update>());
+        }
         userUpdates.get(u).add(new Update(update));
       }
     }
