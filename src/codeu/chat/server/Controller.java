@@ -71,9 +71,6 @@ public final class Controller implements RawController, BasicController {
 
       message = new Message(id, Uuid.NULL, Uuid.NULL, creationTime, author, body);
       model.add(message);
-
-      //model.update(foundUser, foundConversation);
-
       LOG.info("Message added: %s", message.id);
 
       if(!retrieveOn){
@@ -155,9 +152,6 @@ public final class Controller implements RawController, BasicController {
     if (foundOwner != null && isIdFree(id)) {
       conversation = new ConversationHeader(id, owner, creationTime, title);
       model.add(conversation);
-
-      model.updateNewConversation(foundOwner, conversation);
-
       LOG.info("Conversation added: " + id);
 
       if(!retrieveOn){
