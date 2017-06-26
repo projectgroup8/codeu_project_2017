@@ -122,9 +122,9 @@ public final class Server {
         final String title = Serializers.STRING.read(in);
         final Uuid owner = Uuid.SERIALIZER.read(in);
         final ConversationHeader conversation = controller.newConversation(title, owner);
-//        if(controller.isRetrieving()){
-//          controller.saveConversation(conversation);
-//        }
+        if(controller.isRetrieving()){
+          controller.saveConversation(conversation);
+        }
 
         Serializers.INTEGER.write(out, NetworkCode.NEW_CONVERSATION_RESPONSE);
         Serializers.nullable(ConversationHeader.SERIALIZER).write(out, conversation);

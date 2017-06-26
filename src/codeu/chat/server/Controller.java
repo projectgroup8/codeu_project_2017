@@ -156,16 +156,12 @@ public final class Controller implements RawController, BasicController {
     if (foundOwner != null && isIdFree(id)) {
       conversation = new ConversationHeader(id, owner, creationTime, title);
       model.add(conversation);
-      LOG.info("Before updating..");
-
-//      model.updateNewConversation(foundOwner, conversation);
-
       LOG.info("Conversation added: " + id);
 
       if(!retrieveOn){
           transactionLogger.addConversation(conversation);
           transactionLogger.appendToLog();
-//          model.updateNewConversation(model.userById().first(owner),conversation);
+          model.updateNewConversation(model.userById().first(owner),conversation);
       }
     }
 
