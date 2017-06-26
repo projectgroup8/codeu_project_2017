@@ -62,7 +62,7 @@ public final class UserContext {
   }
 
   public void clearUpdates(){
-    controller.clearUpdates(user);
+    controller.clearUpdates(user.id);
   }
 
   
