@@ -198,6 +198,7 @@ public final class Chat {
       } 
     });
 
+
     // Now that the panel has all its commands registered, return the panel
     // so that it can be used.
     return panel;
@@ -314,6 +315,18 @@ public final class Chat {
         System.out.println("User Info:");
         System.out.format("  Name : %s\n", user.user.name);
         System.out.format("  Id   : UUID:%s\n", user.user.id);
+      }
+    });
+
+    panel.register("u-subscribe", new Panel.Command() {
+      @Override
+      public void invoke(List<String> args) {
+        final String name = args.size() > 0 ? args.get(0) : "";
+        if (name.length() > 0) {
+          user.subscribe(name);
+        } else {
+          System.out.println("ERROR: Missing <username>");
+        }
       }
     });
 

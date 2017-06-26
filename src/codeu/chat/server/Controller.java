@@ -22,6 +22,7 @@ import codeu.chat.common.Message;
 import codeu.chat.common.RandomUuidGenerator;
 import codeu.chat.common.RawController;
 import codeu.chat.common.User;
+import codeu.chat.common.UserSub;
 import codeu.chat.util.*;
 import com.google.gson.Gson;
 
@@ -69,6 +70,9 @@ public final class Controller implements RawController, BasicController {
 
       message = new Message(id, Uuid.NULL, Uuid.NULL, creationTime, author, body);
       model.add(message);
+
+      //model.update(foundUser, foundConversation);
+
       LOG.info("Message added: %s", message.id);
 
       if(!retrieveOn){
@@ -150,6 +154,8 @@ public final class Controller implements RawController, BasicController {
       conversation = new ConversationHeader(id, owner, creationTime, title);
       model.add(conversation);
 
+      model.updateNewConversation(foundOwner, conversation);
+
       LOG.info("Conversation added: " + id);
 
       if(!retrieveOn){
@@ -159,6 +165,13 @@ public final class Controller implements RawController, BasicController {
     }
 
     return conversation;
+  }
+
+  @Override
+  public void newUserSubscription(String name, Uuid user) {
+    final User subscribingUser = model.userById().first(user); 
+    final UserSub userSub = new UserSub(model.userByText().first(name)); 
+    model.addUserSubscription(subscribingUser, userSub);
   }
 
   private Uuid createId() {

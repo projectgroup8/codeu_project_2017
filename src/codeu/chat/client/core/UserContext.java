@@ -53,4 +53,8 @@ public final class UserContext {
 
     return all;
   }
+
+  public void subscribe(String name) {
+    controller.newUserSubscription(name, user.id);  
+  }
 }
