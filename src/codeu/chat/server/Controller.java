@@ -179,7 +179,7 @@ import java.util.LinkedList;
   }
 
   @Override
-  public void clearUpdates(User user) {
+  public void clearUpdates(Uuid user) {
     model.clearUpdates(user);
   }
 
