@@ -170,14 +170,14 @@ public final class Model {
 
   public Subscribable getSubcriptionKey(Subscribable sub){
     for(Subscribable s: userSubscriptions.keySet()){
-      if(s.getId() == sub.getId()){
+      if (s.getId() == sub.getId()){
         return s;
       }
     }
     return null;
   }
 
-  public Subscribable getSubcriptionKey(Uuid id){
+  public Subscribable getSubcriptionKeyFromId(Uuid id){
     for(Subscribable s: userSubscriptions.keySet()){
       if(s.getId() == id){
         return s;
@@ -191,27 +191,36 @@ public final class Model {
     // has been created from the user.
 
     // first update the people that are following the user.
-    Subscribable subscription = getSubcriptionKey(user.id);
-    HashSet<User> users = getUsersOfSub(subscription);
-    if(users.size() != 0){
-      for(User u: users){
-        // update the subscribers that the user has added a new message to the conversation.
-        String update = ((UserSub) subscription).getUser().name + " has added a new message to conversation " + conversation.title;
-        userUpdates.get(u).add(new Update(update));
+    Subscribable subscription = getSubcriptionKeyFromId(user.id);
+    HashSet<User> users = new HashSet<User>();
+    if(subscription != null){
+      users = getUsersOfSub(subscription);
+      if(users.size() != 0){
+        for(User u: users){
+          // update the subscribers that the user has added a new message to the conversation.
+          String update = ((UserSub) subscription).getUser().name + " has added a new message to conversation " + conversation.title;
+          if(!userUpdates.containsKey(u)){
+            userUpdates.put(u, new HashSet<Update>());
+          }
+          userUpdates.get(u).add(new Update(update));
+          System.out.println("new message added to updates.");
+        }
       }
     }
 
     // now update the people that are following this conversation.
-    subscription = getSubcriptionKey(conversation.id);
-    users = getUsersOfSub(subscription);
-    if(users.size() != 0){
-      for(User u: users){
-        // update the subscribers that this conversation has a new unread message.
-        String update = "Conversation " + ((ConvoSub) subscription).getConversation().title + " has a new unread message";
-        if(!userUpdates.containsKey(u)){
-          userUpdates.put(u, new HashSet<Update>());
+    subscription = getSubcriptionKeyFromId(conversation.id);
+    if(subscription != null){
+      users = getUsersOfSub(subscription);
+      if(users.size() != 0){
+        for(User u: users){
+          // update the subscribers that this conversation has a new unread message.
+          String update = "Conversation " + ((ConvoSub) subscription).getConversation().title + " has a new unread message";
+          if(!userUpdates.containsKey(u)){
+            userUpdates.put(u, new HashSet<Update>());
+          }
+          userUpdates.get(u).add(new Update(update));
         }
-        userUpdates.get(u).add(new Update(update));
       }
     }
 
@@ -220,14 +229,17 @@ public final class Model {
   public void updateNewConversation(User user, ConversationHeader conversation){
     // this updates the subscribers of the user when a new conversation has been
     // created by that user.
-    HashSet<User> users = getUsersOfSub(getSubcriptionKey(user.id));
-    if(users.size() != 0){
-      for(User u: users){
-        String update = "User " + user.name + " has created a new conversation " + conversation.title;
-        if(!userUpdates.containsKey(u)){
-          userUpdates.put(u, new HashSet<Update>());
+    Subscribable subscription = getSubcriptionKeyFromId(user.id);
+    if(subscription != null){
+      HashSet<User> users = getUsersOfSub(subscription);
+      if(users.size() != 0){
+        for(User u: users){
+          String update = "User " + user.name + " has created a new conversation " + conversation.title;
+          if(!userUpdates.containsKey(u)){
+            userUpdates.put(u, new HashSet<Update>());
+          }
+          userUpdates.get(u).add(new Update(update));
         }
-        userUpdates.get(u).add(new Update(update));
       }
     }
   }
@@ -242,5 +254,13 @@ public final class Model {
       }
     }
     return new HashSet<Update>();
+  }
+
+  public void clearUpdates(User u){
+    for(User user: userUpdates.keySet()){
+      if(u.id == user.id){
+        userUpdates.get(u).clear();
+      }
+    }
   }
 }
