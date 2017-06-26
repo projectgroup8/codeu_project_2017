@@ -195,6 +195,26 @@ public final class Server {
       }
     });
 
+    this.commands.put(NetworkCode.NEW_USER_SUBSCRIPTION_REQUEST,  new Command() {
+      @Override
+      public void onMessage(InputStream in, OutputStream out) throws IOException {
+        final String name = Serializers.STRING.read(in);
+        final Uuid user = Uuid.SERIALIZER.read(in);
+        controller.newUserSubscription(name, user);
+        Serializers.INTEGER.write(out, NetworkCode.NEW_USER_SUBSCRIPTION_RESPONSE);
+      }
+    });
+
+    this.commands.put(NetworkCode.NEW_CONVERSATION_REQUEST,  new Command() {
+      @Override
+      public void onMessage(InputStream in, OutputStream out) throws IOException {
+        final String title = Serializers.STRING.read(in);
+        final Uuid user = Uuid.SERIALIZER.read(in);
+        controller.newUserSubscription(title, user);
+        Serializers.INTEGER.write(out, NetworkCode.NEW_CONVERSATION_SUBSCRIPTION_RESPONSE);
+      }
+    });
+
     this.timeline.scheduleNow(new Runnable() {
       @Override
       public void run() {
