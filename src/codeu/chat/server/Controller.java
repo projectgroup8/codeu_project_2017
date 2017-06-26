@@ -22,6 +22,8 @@ import codeu.chat.common.Message;
 import codeu.chat.common.RandomUuidGenerator;
 import codeu.chat.common.RawController;
 import codeu.chat.common.User;
+import codeu.chat.common.UserSub;
+import codeu.chat.common.ConvoSub;
 import codeu.chat.util.*;
 import com.google.gson.Gson;
 
@@ -69,11 +71,15 @@ public final class Controller implements RawController, BasicController {
 
       message = new Message(id, Uuid.NULL, Uuid.NULL, creationTime, author, body);
       model.add(message);
+
+      //model.update(foundUser, foundConversation);
+
       LOG.info("Message added: %s", message.id);
 
       if(!retrieveOn){
         transactionLogger.addMessage(conversation, message);
         transactionLogger.appendToLog();
+        model.update(model.userById().first(author), model.conversationById().first(conversation));
       }
 
       // Find and update the previous "last" message so that it's "next" value
@@ -150,15 +156,32 @@ public final class Controller implements RawController, BasicController {
       conversation = new ConversationHeader(id, owner, creationTime, title);
       model.add(conversation);
 
+      model.updateNewConversation(foundOwner, conversation);
+
       LOG.info("Conversation added: " + id);
 
       if(!retrieveOn){
           transactionLogger.addConversation(conversation);
           transactionLogger.appendToLog();
+          model.updateNewConversation(model.userById().first(owner),conversation);
       }
     }
 
     return conversation;
+  }
+
+  @Override
+  public void newUserSubscription(String name, Uuid user) {
+    final User subscribingUser = model.userById().first(user); 
+    final UserSub userSub = new UserSub(model.userByText().first(name)); 
+    model.addUserSubscription(subscribingUser, userSub);
+  }
+
+  @Override
+  public void newConversationSubscription(String title, Uuid user) {
+    final User subscribingUser = model.userById().first(user); 
+    final ConvoSub convoSub = new ConvoSub(model.conversationByText().first(title)); 
+    model.addConversationSub(subscribingUser, convoSub);
   }
 
   private Uuid createId() {

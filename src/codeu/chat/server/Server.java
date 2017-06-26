@@ -33,6 +33,7 @@ import codeu.chat.common.NetworkCode;
 import codeu.chat.common.Relay;
 import codeu.chat.common.Secret;
 import codeu.chat.common.User;
+import codeu.chat.common.Update;
 import codeu.chat.common.ServerInfo;
 import codeu.chat.util.*;
 import codeu.chat.util.connections.Connection;
@@ -180,6 +181,17 @@ public final class Server {
 
         Serializers.INTEGER.write(out, NetworkCode.GET_MESSAGES_BY_ID_RESPONSE);
         Serializers.collection(Message.SERIALIZER).write(out, messages);
+      }
+    });
+
+    this.commands.put(NetworkCode.GET_UPDATES_BY_ID_REQUEST, new Command() {
+      @Override
+      public void onMessage(InputStream in, OutputStream out) throws IOException {
+        final Collection<Uuid> ids = Serializers.collection(Uuid.SERIALIZER).read(in);
+        final Collection<Update> updates = view.getUpdates(ids);
+
+        Serializers.INTEGER.write(out, NetworkCode.GET_UPDATES_BY_ID_RESPONSE);
+        Serializers.collection(Update.SERIALIZER).write(out,updates);
       }
     });
 
