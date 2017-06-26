@@ -321,6 +321,8 @@ public final class Chat {
         while (updates.hasNext()) {
           System.out.println(updates.next().getUpdate());
         }
+        // clear updates here.
+        user.clearUpdates();
       }
     });
 
