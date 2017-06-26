@@ -205,7 +205,7 @@ public final class Server {
       }
     });
 
-    this.commands.put(NetworkCode.NEW_CONVERSATION_REQUEST,  new Command() {
+    this.commands.put(NetworkCode.NEW_CONVERSATION_SUBSCRIPTION_REQUEST,  new Command() {
       @Override
       public void onMessage(InputStream in, OutputStream out) throws IOException {
         final String title = Serializers.STRING.read(in);
