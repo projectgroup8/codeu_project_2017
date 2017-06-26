@@ -51,4 +51,7 @@ public interface BasicController {
   //  Whether conversations can have the same title is undefined.
   ConversationHeader newConversation(String title, Uuid owner);
 
+  void newUserSubscription(String name, Uuid user);
+
+  void newConversationSubscription(String title, Uuid user);
 }
