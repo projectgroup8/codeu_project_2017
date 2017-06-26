@@ -92,10 +92,6 @@ public final class Model {
     conversationByText.insert(conversation.title, conversation);
     conversationPayloadById.insert(conversation.id, new ConversationPayload(conversation.id));
 
-    //public void updateNewConversation(User user, ConversationHeader conversation){
-    // this updates the subscribers of the user when a new conversation has been
-    // created by that user.
-
   }
 
   public StoreAccessor<Uuid, ConversationHeader> conversationById() {
@@ -231,11 +227,6 @@ public final class Model {
   public HashSet<Update> getUpdates(User u){
     // retrieves the updates for the user.
     // we still have to iteratively match the uuids of the user with user u.
-
-    /* TEST UPDATE
-    HashSet<Update> map = new HashSet<Update>();
-    map.add(new Update("Test update"));
-    userUpdates.put(u, map);*/
 
     for(User user: userUpdates.keySet()){
       if(u.id == user.id){
