@@ -54,7 +54,11 @@ public final class UserContext {
     return all;
   }
 
-  public void subscribe(String name) {
+  public void userSubscribe(String name) {
     controller.newUserSubscription(name, user.id);  
+  }
+
+  public void conversationSubscribe(String title) {
+    controller.newConversationSubscription(title, user.id);
   }
 }

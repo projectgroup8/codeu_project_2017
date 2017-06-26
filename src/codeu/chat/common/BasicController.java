@@ -52,4 +52,6 @@ public interface BasicController {
   ConversationHeader newConversation(String title, Uuid owner);
 
   void newUserSubscription(String name, Uuid user);
+
+  void newConversationSubscription(String title, Uuid user);
 }

@@ -131,4 +131,23 @@ final class Controller implements BasicController {
       LOG.error(ex, "Exception during call on server.");
     } 
   }
+
+  @Override
+  public void newConversationSubscription(String title, Uuid user) {
+    try (final Connection connection = source.connect()) {
+      Serializers.INTEGER.write(connection.out(), NetworkCode.NEW_CONVERSATION_SUBSCRIPTION_REQUEST);
+      Serializers.STRING.write(connection.out(), title);
+      Uuid.SERIALIZER.write(connection.out(), user);
+      LOG.info("newConversationSubscription: Request completed.");
+
+      if (Serializers.INTEGER.read(connection.in()) == NetworkCode.NEW_CONVERSATION_SUBSCRIPTION_RESPONSE) {
+        LOG.info("newConversationSubscription: Response completed.");
+      } else {
+        LOG.error("Response from server failed.");
+      }
+    } catch (Exception ex) {
+      System.out.println("ERROR: Exception during call on server. Check log for details.");
+      LOG.error(ex, "Exception during call on server.");
+    } 
+  }
 }

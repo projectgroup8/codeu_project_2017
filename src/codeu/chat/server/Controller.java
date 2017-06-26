@@ -23,6 +23,7 @@ import codeu.chat.common.RandomUuidGenerator;
 import codeu.chat.common.RawController;
 import codeu.chat.common.User;
 import codeu.chat.common.UserSub;
+import codeu.chat.common.ConvoSub;
 import codeu.chat.util.*;
 import com.google.gson.Gson;
 
@@ -172,6 +173,13 @@ public final class Controller implements RawController, BasicController {
     final User subscribingUser = model.userById().first(user); 
     final UserSub userSub = new UserSub(model.userByText().first(name)); 
     model.addUserSubscription(subscribingUser, userSub);
+  }
+
+  @Override
+  public void newConversationSubscription(String title, Uuid user) {
+    final User subscribingUser = model.userById().first(user); 
+    final ConvoSub convoSub = new ConvoSub(model.conversationByText().first(title)); 
+    model.addConversationSub(subscribingUser, convoSub);
   }
 
   private Uuid createId() {
