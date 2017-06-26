@@ -71,15 +71,11 @@ public final class Controller implements RawController, BasicController {
 
       message = new Message(id, Uuid.NULL, Uuid.NULL, creationTime, author, body);
       model.add(message);
-
-      //model.update(foundUser, foundConversation);
-
       LOG.info("Message added: %s", message.id);
 
       if(!retrieveOn){
         transactionLogger.addMessage(conversation, message);
         transactionLogger.appendToLog();
-        LOG.info("Before updating..");
         model.update(model.userById().first(author), model.conversationById().first(conversation));
       }
 

@@ -159,7 +159,6 @@ public final class Model {
 
   public HashSet<User> getUsersOfSub(Subscribable sub){
     Subscribable s = getSubcriptionKey(sub);
-    System.out.println("s: " + s);
     if(s == null){
       return new HashSet<User>();
     }
