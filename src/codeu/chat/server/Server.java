@@ -210,7 +210,7 @@ public final class Server {
       public void onMessage(InputStream in, OutputStream out) throws IOException {
         final String title = Serializers.STRING.read(in);
         final Uuid user = Uuid.SERIALIZER.read(in);
-        controller.newUserSubscription(title, user);
+        controller.newConversationSubscription(title, user);
         Serializers.INTEGER.write(out, NetworkCode.NEW_CONVERSATION_SUBSCRIPTION_RESPONSE);
       }
     });
