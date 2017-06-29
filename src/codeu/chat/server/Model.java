@@ -158,12 +158,11 @@ public final class Model {
   }
 
   public HashSet<User> getUsersOfSub(Subscribable sub){
-    Subscribable s = getSubcriptionKey(sub);
-    if(s == null){
+    if(sub == null){
       return new HashSet<User>();
     }
     else{
-      return userSubscriptions.get(s);
+      return userSubscriptions.get(sub);
     }
   }
 
@@ -256,11 +255,7 @@ public final class Model {
     return new HashSet<Update>();
   }
 
-  public void clearUpdates(Uuid id){
-    for(User user: userUpdates.keySet()){
-      if(id == user.id){
-        userUpdates.get(user).clear();
-      }
-    }
+  public void clearUpdates(User user){
+    userUpdates.get(user).clear();
   }
 }
