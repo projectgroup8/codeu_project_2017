@@ -60,6 +60,11 @@ public final class UserContext {
     ids.add(user.id);
     return view.getUpdates(ids);
   }
+
+  public void clearUpdates(){
+    controller.clearUpdates(user.id);
+  }
+
   
   public void userSubscribe(String name) {
     controller.newUserSubscription(name, user.id);  

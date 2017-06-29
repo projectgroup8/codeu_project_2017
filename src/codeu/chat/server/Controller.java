@@ -29,7 +29,7 @@ import com.google.gson.Gson;
 
 import java.util.LinkedList;
 
-public final class Controller implements RawController, BasicController {
+    public final class Controller implements RawController, BasicController {
 
   private final static Logger.Log LOG = Logger.newLog(Controller.class);
   private final static TransactionLogger transactionLogger = new TransactionLogger();
@@ -71,9 +71,6 @@ public final class Controller implements RawController, BasicController {
 
       message = new Message(id, Uuid.NULL, Uuid.NULL, creationTime, author, body);
       model.add(message);
-
-      //model.update(foundUser, foundConversation);
-
       LOG.info("Message added: %s", message.id);
 
       if(!retrieveOn){
@@ -155,9 +152,6 @@ public final class Controller implements RawController, BasicController {
     if (foundOwner != null && isIdFree(id)) {
       conversation = new ConversationHeader(id, owner, creationTime, title);
       model.add(conversation);
-
-      model.updateNewConversation(foundOwner, conversation);
-
       LOG.info("Conversation added: " + id);
 
       if(!retrieveOn){
@@ -182,6 +176,11 @@ public final class Controller implements RawController, BasicController {
     final User subscribingUser = model.userById().first(user); 
     final ConvoSub convoSub = new ConvoSub(model.conversationByText().first(title)); 
     model.addConversationSub(subscribingUser, convoSub);
+  }
+
+  @Override
+  public void clearUpdates(Uuid user) {
+    model.clearUpdates(user);
   }
 
   private Uuid createId() {
