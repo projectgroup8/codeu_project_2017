@@ -407,9 +407,7 @@ public final class Chat {
     panel.register("m-list", new Panel.Command() {
       @Override
       public void invoke(List<String> args) {
-        if(conversation.conversation.getAccessLevel(conversation.user).hasMemberAccess()
-                || conversation.conversation.getAccessLevel(conversation.user).hasOwnerAccess()
-                || conversation.conversation.getAccessLevel(conversation.user).hasCreatorAccess()){
+        if(conversation.conversation.getAccessLevel(conversation.user).hasMemberAccess()){
           System.out.println("--- start of conversation ---");
           for (MessageContext message = conversation.firstMessage();
                message != null;
