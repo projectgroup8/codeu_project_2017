@@ -203,7 +203,7 @@ import java.util.LinkedList;
 
     AccessLevel level = conversationHeader.getAccessLevel(u);
 
-    if(level.hasCreatorAccess()){
+    if(level.hasOwnerAccess()){
       System.out.println("The user already has owner status.");
     }
     else if(level.hasCreatorAccess()){

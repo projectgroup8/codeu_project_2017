@@ -455,8 +455,7 @@ public final class Chat {
       @Override
       public void invoke(List<String> args) {
         // we first need to check if the user doing the act has the authority.
-        if(conversation.conversation.getAccessLevel(conversation.user).hasOwnerAccess()
-                || conversation.conversation.getAccessLevel(conversation.user).hasCreatorAccess()){
+        if(conversation.conversation.getAccessLevel(conversation.user).hasOwnerAccess()){
 
           final String user = args.size() > 0 ? args.get(0) : "";
           if (user.length() > 0) {
