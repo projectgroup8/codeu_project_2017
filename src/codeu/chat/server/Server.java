@@ -224,6 +224,28 @@ public final class Server {
       }
     });
 
+    this.commands.put(NetworkCode.ADD_MEMBER_REQUEST,  new Command() {
+      @Override
+      public void onMessage(InputStream in, OutputStream out) throws IOException {
+        final String user = Serializers.STRING.read(in);
+        final Uuid conversation = Uuid.SERIALIZER.read(in);
+        controller.addMember(user, conversation);
+
+        Serializers.INTEGER.write(out, NetworkCode.ADD_MEMBER_RESPONSE);
+      }
+    });
+
+    this.commands.put(NetworkCode.ADD_OWNER_REQUEST,  new Command() {
+      @Override
+      public void onMessage(InputStream in, OutputStream out) throws IOException {
+        final String user = Serializers.STRING.read(in);
+        final Uuid conversation = Uuid.SERIALIZER.read(in);
+        controller.addOwner(user, conversation);
+
+        Serializers.INTEGER.write(out, NetworkCode.ADD_OWNER_RESPOND);
+      }
+    });
+
     this.timeline.scheduleNow(new Runnable() {
       @Override
       public void run() {
