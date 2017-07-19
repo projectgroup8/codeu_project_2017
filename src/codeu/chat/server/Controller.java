@@ -188,7 +188,7 @@ import java.util.LinkedList;
     if(level.hasMemberAccess()){
       System.out.println("The user is already a member.");
     }
-    else if(level.hasOwnerAccess() || level.hasCreatorAccess()){
+    else if(level.hasOwnerAccess()){
       System.out.println("You cannot lower an owner's or creator's status.");
     }
     else{
