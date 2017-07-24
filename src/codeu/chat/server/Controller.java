@@ -179,6 +179,42 @@ import java.util.LinkedList;
   }
 
   @Override
+  public void addMember(String user, Uuid conversation) {
+    final User u = model.userByText().first(user);
+    final ConversationHeader conversationHeader = model.conversationById().first(conversation);
+
+    AccessLevel level = conversationHeader.getAccessLevel(u);
+
+    if(level.hasMemberAccess()){
+      System.out.println("The user is already a member.");
+    }
+    else if(level.hasOwnerAccess()){
+      System.out.println("You cannot lower an owner's or creator's status.");
+    }
+    else{
+      level.setMemberStatus();
+    }
+  }
+
+  @Override
+  public void addOwner(String user, Uuid conversation) {
+    final User u = model.userByText().first(user);
+    final ConversationHeader conversationHeader = model.conversationById().first(conversation);
+
+    AccessLevel level = conversationHeader.getAccessLevel(u);
+
+    if(level.hasOwnerAccess()){
+      System.out.println("The user already has owner status.");
+    }
+    else if(level.hasCreatorAccess()){
+      System.out.println("You cannot lower a creator's status.");
+    }
+    else{
+      level.setOwnerStatus();
+    }
+  }
+
+  @Override
   public void clearUpdates(Uuid user) {
     model.clearUpdates(model.userById().first(user));
   }

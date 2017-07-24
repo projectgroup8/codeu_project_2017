@@ -55,5 +55,8 @@ public interface BasicController {
 
   void newConversationSubscription(String title, Uuid user);
 
+  void addMember(String user, Uuid conversation);
+  void addOwner(String user, Uuid conversation);
+
   void clearUpdates(Uuid user);
 }

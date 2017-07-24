@@ -386,6 +386,10 @@ public final class Chat {
         System.out.println("    List all messages in the current conversation.");
         System.out.println("  m-add <message>");
         System.out.println("    Add a new message to the current conversation as the current user.");
+        System.out.println("  member-add <user>");
+        System.out.println("    Add a new member to the current conversation.");
+        System.out.println("  owner-add <user>");
+        System.out.println("    Add a new owner to the current conversation.");
         System.out.println("  info");
         System.out.println("    Display all info about the current conversation.");
         System.out.println("  back");
@@ -403,18 +407,23 @@ public final class Chat {
     panel.register("m-list", new Panel.Command() {
       @Override
       public void invoke(List<String> args) {
-        System.out.println("--- start of conversation ---");
-        for (MessageContext message = conversation.firstMessage();
-                            message != null;
-                            message = message.next()) {
-          System.out.println();
-          System.out.format("USER : %s\n", message.message.author);
-          System.out.format("SENT : %s\n", message.message.creation);
-          System.out.println();
-          System.out.println(message.message.content);
-          System.out.println();
+        if(conversation.conversation.getAccessLevel(conversation.user).hasMemberAccess()){
+          System.out.println("--- start of conversation ---");
+          for (MessageContext message = conversation.firstMessage();
+               message != null;
+               message = message.next()) {
+            System.out.println();
+            System.out.format("USER : %s\n", message.message.author);
+            System.out.format("SENT : %s\n", message.message.creation);
+            System.out.println();
+            System.out.println(message.message.content);
+            System.out.println();
+          }
+          System.out.println("---  end of conversation  ---");
         }
-        System.out.println("---  end of conversation  ---");
+        else{
+          System.out.println("You do not have access to view the messages.");
+        }
       }
     });
 
@@ -431,6 +440,56 @@ public final class Chat {
           conversation.add(message);
         } else {
           System.out.println("ERROR: Messages must contain text");
+        }
+      }
+    });
+
+    // MEMBER-ADD (add user)
+    //
+    // Add a command to add a new member to the current conversation when the
+    // user enters "member-add" while on the conversation panel.
+    //
+    panel.register("member-add", new Panel.Command() {
+      @Override
+      public void invoke(List<String> args) {
+        // we first need to check if the user doing the act has the authority.
+        if(conversation.conversation.getAccessLevel(conversation.user).hasOwnerAccess()){
+
+          final String user = args.size() > 0 ? args.get(0) : "";
+          if (user.length() > 0) {
+            conversation.addMember(user, conversation.conversation.id);
+          } else {
+            System.out.println("ERROR: Enter a valid user.");
+          }
+        }
+        else{
+          System.out.println("You do not have the authority to add a new member. "
+                  + "Only owners and creators are allowed to do such action.");
+        }
+      }
+    });
+
+    // OWNER-ADD (add user)
+    //
+    // Add a command to add a new owner to the current conversation when the
+    // user enters "member-add" while on the conversation panel.
+    //
+    panel.register("owner-add", new Panel.Command() {
+      @Override
+      public void invoke(List<String> args) {
+        // we first need to check if the user doing the act has the authority.
+        if(conversation.conversation.getAccessLevel(conversation.user).hasCreatorAccess()){
+
+          final String user = args.size() > 0 ? args.get(0) : "";
+          if (user.length() > 0) {
+            conversation.addOwner(user, conversation.conversation.id);
+          } else {
+            System.out.println("ERROR: Enter a valid user.");
+          }
+        }
+        else{
+          System.out.println("You do not have the authority to add a new owner. "
+                  + "Only creators are allowed to do such action.");
         }
       }
     });

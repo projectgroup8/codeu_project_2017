@@ -88,4 +88,14 @@ public final class ConversationContext {
     final Iterator<Message> messages = view.getMessages(Arrays.asList(id)).iterator();
     return messages.hasNext() ? new MessageContext(messages.next(), view) : null;
   }
+
+  public void addMember(String user, Uuid conversation){
+    controller.addMember(user, conversation);
+
+  }
+
+  public void addOwner(String user, Uuid conversation){
+    controller.addOwner(user, conversation);
+
+  }
 }
