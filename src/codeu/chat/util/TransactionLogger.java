@@ -26,71 +26,74 @@ public class TransactionLogger {
 		lastWrite = System.currentTimeMillis();
 	}
 
-  // methods to serialize commands.
-  public void addUser(User user) {
-    UserJson userJson = new UserJson("ADD-USER", user);
-    Gson gson = new Gson();
-    log(gson.toJson(userJson));
-  }
+	// methods to serialize commands.
+	public void addUser(User user) {
+		UserJson userJson = new UserJson("ADD-USER", user);
+		Gson gson = new Gson();
+		log(gson.toJson(userJson));
+	}
+	public void addConversation(ConversationHeader conversation) {
+		ConversationJson conversationJson = new ConversationJson("ADD-CONVERSATION", conversation);
+		System.out.print("Add convo default: ");
+		System.out.println(conversationJson.defaultAccess);
+		Gson gson = new Gson();
+		log(gson.toJson(conversationJson));
+	}
 
-  public void addConversation(ConversationHeader conversation) {
-    ConversationJson conversationJson = new ConversationJson("ADD-CONVERSATION", conversation);
-    Gson gson = new Gson();
-    log(gson.toJson(conversationJson));
-  }
+	public void addMessage(Uuid conversation, Message message) {
+		MessageJson messageJson = new MessageJson("ADD-MESSAGE", conversation, message);
+		Gson gson = new Gson();
+		log(gson.toJson(messageJson));  
+	}
 
-  public void addMessage(Uuid conversation, Message message) {
-    MessageJson messageJson = new MessageJson("ADD-MESSAGE", conversation, message);
-    Gson gson = new Gson();
-    log(gson.toJson(messageJson));  
-  }
+	// methods to deserialze commands.
+	public void retrieveUser(Controller controller, JsonObject jsonObject){
+		try {
+			Uuid id = Uuid.parse(jsonObject.get("uuid").getAsString());
+			String name = jsonObject.get("name").getAsString();
+			SimpleDateFormat formatter = new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss.SSS");
+			Time creation = Time.fromMs(formatter.parse(jsonObject.get("creation").getAsString()).getTime());
+			controller.newUser(id, name, creation);
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+	}
 
-    // methods to deserialze commands.
-    public void retrieveUser(Controller controller, JsonObject jsonObject){
-        try {
-            Uuid id = Uuid.parse(jsonObject.get("uuid").getAsString());
-            String name = jsonObject.get("name").getAsString();
-            SimpleDateFormat formatter = new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss.SSS");
-            Time creation = Time.fromMs(formatter.parse(jsonObject.get("creation").getAsString()).getTime());
-            controller.newUser(id, name, creation);
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
-    }
+	public void retrieveConversation(Controller controller, JsonObject jsonObject){
+		try {
+			Uuid id = Uuid.parse(jsonObject.get("uuid").getAsString());
+			Uuid owner = Uuid.parse(jsonObject.get("owner").getAsString());
+			SimpleDateFormat formatter = new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss.SSS");
+			Time creation = Time.fromMs(formatter.parse(jsonObject.get("creation").getAsString()).getTime());
+			String title = jsonObject.get("title").getAsString();
+			AccessLevel defaultAl = new AccessLevel( jsonObject.get("defaultAccess").getAsByte() );
+			System.out.print("Retrieved default access: ");
+			System.out.println(defaultAl);
+			controller.newConversation(id, title, owner, creation, defaultAl);
+		} catch (Exception e) {
+			e.printStackTrace();
+		} /*catch (ParseException e) {
+			e.printStackTrace();
+		}*/
+	}
 
-    public void retrieveConversation(Controller controller, JsonObject jsonObject){
-        try {
-            Uuid id = Uuid.parse(jsonObject.get("uuid").getAsString());
-            Uuid owner = Uuid.parse(jsonObject.get("owner").getAsString());
-            SimpleDateFormat formatter = new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss.SSS");
-            Time creation = Time.fromMs(formatter.parse(jsonObject.get("creation").getAsString()).getTime());
-            String title = jsonObject.get("title").getAsString();
-            AccessLevel defaultAl = new AccessLevel( jsonObject.get("defaultAccess").getAsByte() );
-            controller.newConversation(id, title, owner, creation, defaultAl);
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void retrieveMessage(Controller controller, JsonObject jsonObject){
-        try {
-            Uuid id = Uuid.parse(jsonObject.get("uuid").getAsString());
-            Uuid conversation = Uuid.parse(jsonObject.get("conversation").getAsString());
-            SimpleDateFormat formatter = new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss.SSS");
-            Time creation = Time.fromMs(formatter.parse(jsonObject.get("creation").getAsString()).getTime());
-            Uuid author = Uuid.parse(jsonObject.get("author").getAsString());
-            String content = jsonObject.get("content").getAsString();
-            controller.newMessage(id, author, conversation, content, creation);
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
-    }
+	public void retrieveMessage(Controller controller, JsonObject jsonObject){
+		try {
+			Uuid id = Uuid.parse(jsonObject.get("uuid").getAsString());
+			Uuid conversation = Uuid.parse(jsonObject.get("conversation").getAsString());
+			SimpleDateFormat formatter = new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss.SSS");
+			Time creation = Time.fromMs(formatter.parse(jsonObject.get("creation").getAsString()).getTime());
+			Uuid author = Uuid.parse(jsonObject.get("author").getAsString());
+			String content = jsonObject.get("content").getAsString();
+			controller.newMessage(id, author, conversation, content, creation);
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+	}
 
 	// All log writes pass through this function
 	// Checks whether queue to file is needed
@@ -122,34 +125,34 @@ public class TransactionLogger {
 
 	// Reads the transactions from the log and executes them.
 	public void readLog(Controller controller){
-        try {
-            BufferedReader br = new BufferedReader(new FileReader("transactions.log"));
-            try {
-                for(String line; (line = br.readLine()) != null;) {
-                    Gson gson = new Gson();
-                    JsonObject jsonObject = gson.fromJson(line, JsonObject.class);
-                    // find what kind of command it is and execute it.
-                    String action = jsonObject.get("action").getAsString();
-                    switch(action){
-                        case "ADD-USER":
-                            retrieveUser(controller, jsonObject);
-                            break;
-                        case "ADD-CONVERSATION":
-                            retrieveConversation(controller, jsonObject);
-                            break;
-                        case "ADD-MESSAGE":
-                            retrieveMessage(controller, jsonObject);
-                            break;
-                        default: break;
+		try {
+			BufferedReader br = new BufferedReader(new FileReader("transactions.log"));
+			try {
+				for(String line; (line = br.readLine()) != null;) {
+					Gson gson = new Gson();
+					JsonObject jsonObject = gson.fromJson(line, JsonObject.class);
+					// find what kind of command it is and execute it.
+					String action = jsonObject.get("action").getAsString();
+					switch(action){
+						case "ADD-USER":
+							retrieveUser(controller, jsonObject);
+							break;
+						case "ADD-CONVERSATION":
+							retrieveConversation(controller, jsonObject);
+							break;
+						case "ADD-MESSAGE":
+							retrieveMessage(controller, jsonObject);
+							break;
+						default: break;
 
-                    }
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-    }
+					}
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+	}
 
 }

@@ -32,6 +32,7 @@ public final class ConversationHeader {
       Uuid.SERIALIZER.write(out, value.owner);
       Time.SERIALIZER.write(out, value.creation);
       Serializers.STRING.write(out, value.title);
+      AccessLevel.SERIALIZER.write(out, value.defaultAccess);
 
     }
 
@@ -42,7 +43,8 @@ public final class ConversationHeader {
           Uuid.SERIALIZER.read(in),
           Uuid.SERIALIZER.read(in),
           Time.SERIALIZER.read(in),
-          Serializers.STRING.read(in)
+          Serializers.STRING.read(in),
+          AccessLevel.SERIALIZER.read(in)
       );
 
     }
@@ -83,23 +85,13 @@ public final class ConversationHeader {
 
   }
 
-  /*
-  public setDefaultAccess(defaultAccess) {
-    this.defaultAccess = defaultAccess;
-  }
-  */
-
   public AccessLevel getAccessLevel(User user){
     AccessLevel al = accessByUser.get(user.id);
-    if (al == null) { // access not defined for given user
-      System.out.print("Access level: ");
-      System.out.print(defaultAccess);
+    if (al != null) { // access defined for given user
+      return al;
+    } else {
       accessByUser.put(user.id, defaultAccess);
       return defaultAccess;
-    } else {
-      System.out.print("Access level: ");
-      System.out.print(al);
-      return al;
     }
   }
 }
