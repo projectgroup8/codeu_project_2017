@@ -17,6 +17,7 @@ package codeu.chat.common;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.HashMap;
 
 import codeu.chat.util.*;
 
@@ -51,6 +52,8 @@ public final class ConversationHeader {
   public final Uuid owner;
   public final Time creation;
   public final String title;
+  public final AccessLevel defaultAccess;
+  public final HashMap<Uuid, AccessLevel> accessByUser;
 
   public ConversationHeader(Uuid id, Uuid owner, Time creation, String title) {
 
@@ -58,11 +61,25 @@ public final class ConversationHeader {
     this.owner = owner;
     this.creation = creation;
     this.title = title;
+    this.accessByUser = new HashMap<Uuid, AccessLevel>();
+    AccessLevel creatorAL = new AccessLevel();
+    creatorAL.setCreatorStatus();
+    accessByUser.put(owner, creatorAL);
 
   }
 
+  public setDefaultAccess(defaultAccess) {
+    this.defaultAccess = defaultAccess;
+  }
+
   public AccessLevel getAccessLevel(User user){
-    // returns the accessLevel from the map.
-    return accessLevel.get(user);
+    AccessLevel al = accessByUser.get(user.id);
+
+    if (al == null) { // access not defined for given user
+      accessByUser.put(user.id, defaultAccess);
+      return defaultAccess;
+    } else {
+      return al;
+    }
   }
 }
