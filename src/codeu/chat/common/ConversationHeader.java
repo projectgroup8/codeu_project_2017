@@ -57,20 +57,6 @@ public final class ConversationHeader {
   public final AccessLevel defaultAccess;
   public final HashMap<Uuid, AccessLevel> accessByUser;
 
-  public ConversationHeader(Uuid id, Uuid owner, Time creation, String title) {
-
-    this.id = id;
-    this.owner = owner;
-    this.creation = creation;
-    this.title = title;
-    this.accessByUser = new HashMap<Uuid, AccessLevel>();
-    this.defaultAccess =  null;
-    AccessLevel creatorAL = new AccessLevel();
-    creatorAL.setCreatorStatus();
-    accessByUser.put(owner, creatorAL);
-
-  }
-
   public ConversationHeader(Uuid id, Uuid owner, Time creation, String title, AccessLevel defaultAccess) {
 
     this.id = id;
