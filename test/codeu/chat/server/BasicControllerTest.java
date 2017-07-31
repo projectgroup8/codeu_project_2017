@@ -22,6 +22,7 @@ import codeu.chat.common.BasicController;
 import codeu.chat.common.ConversationHeader;
 import codeu.chat.common.Message;
 import codeu.chat.common.User;
+import codeu.chat.util.AccessLevel;
 import codeu.chat.util.Uuid;
 
 public final class BasicControllerTest {
@@ -54,9 +55,12 @@ public final class BasicControllerTest {
         "Check that user has a valid reference",
         user == null);
 
+    AccessLevel noneAl = new AccessLevel();
+    noneAl.setStatus((byte)00000000);
     final ConversationHeader conversation = controller.newConversation(
         "conversation",
-        user.id);
+        user.id,
+        noneAl);
 
     assertFalse(
         "Check that conversation has a valid reference",
@@ -72,9 +76,12 @@ public final class BasicControllerTest {
         "Check that user has a valid reference",
         user == null);
 
+    AccessLevel noneAl = new AccessLevel();
+    noneAl.setStatus((byte)00000000);
     final ConversationHeader conversation = controller.newConversation(
         "conversation",
-        user.id);
+        user.id,
+        noneAl);
 
     assertFalse(
         "Check that conversation has a valid reference",

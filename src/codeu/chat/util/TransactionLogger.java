@@ -12,6 +12,7 @@ import java.lang.System;
 import codeu.chat.common.User;
 import codeu.chat.common.ConversationHeader;
 import codeu.chat.common.Message;
+import codeu.chat.util.AccessLevel;
 import com.google.gson.JsonObject;
 
 
@@ -66,7 +67,8 @@ public class TransactionLogger {
             SimpleDateFormat formatter = new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss.SSS");
             Time creation = Time.fromMs(formatter.parse(jsonObject.get("creation").getAsString()).getTime());
             String title = jsonObject.get("title").getAsString();
-            controller.newConversation(id, title, owner, creation);
+            AccessLevel defaultAl = new AccessLevel( jsonObject.get("defaultAccess").getAsByte() );
+            controller.newConversation(id, title, owner, creation, defaultAl);
         } catch (IOException e) {
             e.printStackTrace();
         } catch (ParseException e) {

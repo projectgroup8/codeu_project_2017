@@ -21,6 +21,7 @@ import codeu.chat.client.core.Context;
 import codeu.chat.client.core.ConversationContext;
 import codeu.chat.client.core.MessageContext;
 import codeu.chat.client.core.UserContext;
+import codeu.chat.util.AccessLevel;
 import codeu.chat.util.Tokenizer;
 import codeu.chat.common.ServerInfo;
 import codeu.chat.common.Update;
@@ -265,7 +266,25 @@ public final class Chat {
       public void invoke(List<String> args) {
         final String name = args.size() > 0 ? args.get(0) : "";
         if (name.length() > 0) {
-          final ConversationContext conversation = user.start(name);
+
+          AccessLevel defaultAl = null;
+          while (defaultAl == null) {
+            Scanner reader = new Scanner(System.in);
+            System.out.println("What is the default access level for this conversation (owner, member, none)?");
+            String resp = reader.next();
+            if (resp.equals("owner")) {
+              defaultAl = new AccessLevel();
+              defaultAl.setOwnerStatus();
+            } else if (resp.equals("member")) {
+              defaultAl = new AccessLevel();
+              defaultAl.setMemberStatus();
+            } else if (resp.equals("none")) {
+              defaultAl = new AccessLevel();
+              defaultAl.setStatus((byte)0b00000000);
+            }
+          }
+
+          final ConversationContext conversation = user.start(name, defaultAl);
           if (conversation == null) {
             System.out.println("ERROR: Failed to create new conversation");
           } else {

@@ -62,23 +62,43 @@ public final class ConversationHeader {
     this.creation = creation;
     this.title = title;
     this.accessByUser = new HashMap<Uuid, AccessLevel>();
+    this.defaultAccess =  null;
     AccessLevel creatorAL = new AccessLevel();
     creatorAL.setCreatorStatus();
     accessByUser.put(owner, creatorAL);
 
   }
 
+  public ConversationHeader(Uuid id, Uuid owner, Time creation, String title, AccessLevel defaultAccess) {
+
+    this.id = id;
+    this.owner = owner;
+    this.creation = creation;
+    this.title = title;
+    this.defaultAccess = defaultAccess;
+    this.accessByUser = new HashMap<Uuid, AccessLevel>();
+    AccessLevel creatorAL = new AccessLevel();
+    creatorAL.setCreatorStatus();
+    accessByUser.put(owner, creatorAL);
+
+  }
+
+  /*
   public setDefaultAccess(defaultAccess) {
     this.defaultAccess = defaultAccess;
   }
+  */
 
   public AccessLevel getAccessLevel(User user){
     AccessLevel al = accessByUser.get(user.id);
-
     if (al == null) { // access not defined for given user
+      System.out.print("Access level: ");
+      System.out.print(defaultAccess);
       accessByUser.put(user.id, defaultAccess);
       return defaultAccess;
     } else {
+      System.out.print("Access level: ");
+      System.out.print(al);
       return al;
     }
   }
