@@ -55,8 +55,8 @@ import java.util.LinkedList;
   }
 
   @Override
-  public ConversationHeader newConversation(String title, Uuid owner) {
-    return newConversation(createId(), title, owner, Time.now());
+  public ConversationHeader newConversation(String title, Uuid owner, AccessLevel defaultAl) {
+    return newConversation(createId(), title, owner, Time.now(), defaultAl);
   }
 
   @Override
@@ -143,14 +143,14 @@ import java.util.LinkedList;
   }
 
   @Override
-  public ConversationHeader newConversation(Uuid id, String title, Uuid owner, Time creationTime) {
+  public ConversationHeader newConversation(Uuid id, String title, Uuid owner, Time creationTime, AccessLevel defaultAl) {
 
     final User foundOwner = model.userById().first(owner);
 
     ConversationHeader conversation = null;
 
     if (foundOwner != null && isIdFree(id)) {
-      conversation = new ConversationHeader(id, owner, creationTime, title);
+      conversation = new ConversationHeader(id, owner, creationTime, title, defaultAl);
       model.add(conversation);
       LOG.info("Conversation added: " + id);
 

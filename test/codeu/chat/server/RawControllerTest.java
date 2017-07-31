@@ -22,6 +22,7 @@ import codeu.chat.common.ConversationHeader;
 import codeu.chat.common.Message;
 import codeu.chat.common.RawController;
 import codeu.chat.common.User;
+import codeu.chat.util.AccessLevel;
 import codeu.chat.util.Time;
 import codeu.chat.util.Uuid;
 
@@ -69,11 +70,14 @@ public final class RawControllerTest {
         "Check that the user has the correct id",
         Uuid.equals(user.id, userId));
 
+    AccessLevel noneAl = new AccessLevel();
+    noneAl.setStatus((byte)00000000);
     final ConversationHeader conversation = controller.newConversation(
         conversationId,
         "conversation",
         user.id,
-        Time.now());
+        Time.now(),
+        noneAl);
 
     assertFalse(
         "Check that conversation has a valid reference",
@@ -95,11 +99,15 @@ public final class RawControllerTest {
         "Check that the user has the correct id",
         Uuid.equals(user.id, userId));
 
+    AccessLevel noneAl = new AccessLevel();
+    noneAl.setStatus((byte)00000000);
     final ConversationHeader conversation = controller.newConversation(
         conversationId,
         "conversation",
         user.id,
-        Time.now());
+        Time.now(),
+        noneAl
+        );
 
     assertFalse(
         "Check that conversation has a valid reference",
