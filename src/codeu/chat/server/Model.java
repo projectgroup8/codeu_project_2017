@@ -243,15 +243,12 @@ public final class Model {
     }
   }
 
-  public HashSet<Update> getUpdates(User u){
-    // retrieves the updates for the user.
-    // we still have to iteratively match the uuids of the user with user u.
-
-    for(User user: userUpdates.keySet()){
-      if(u.id == user.id){
-        return userUpdates.get(u);
-      }
+  public HashSet<Update> getUpdates(User user){
+    HashSet<Update> updates = userUpdates.get(user);
+    if(updates != null){
+      return updates;
     }
+
     return new HashSet<Update>();
   }
 
