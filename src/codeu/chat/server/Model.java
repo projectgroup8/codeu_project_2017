@@ -15,12 +15,10 @@
 package codeu.chat.server;
 
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 
-import codeu.chat.common.ConversationHeader;
-import codeu.chat.common.ConversationPayload;
-import codeu.chat.common.LinearUuidGenerator;
-import codeu.chat.common.Message;
-import codeu.chat.common.User;
+import codeu.chat.common.*;
 import codeu.chat.util.Time;
 import codeu.chat.util.Uuid;
 import codeu.chat.util.store.Store;
@@ -67,6 +65,9 @@ public final class Model {
   private final Store<Time, Message> messageByTime = new Store<>(TIME_COMPARE);
   private final Store<String, Message> messageByText = new Store<>(STRING_COMPARE);
 
+  private final HashMap<Subscribable, HashSet<User>> userSubscriptions = new HashMap<Subscribable, HashSet<User>>();
+  private final HashMap<User, HashSet<Update>> userUpdates = new HashMap<User, HashSet<Update>>();
+
   public void add(User user) {
     userById.insert(user.id, user);
     userByTime.insert(user.creation, user);
@@ -90,6 +91,7 @@ public final class Model {
     conversationByTime.insert(conversation.creation, conversation);
     conversationByText.insert(conversation.title, conversation);
     conversationPayloadById.insert(conversation.id, new ConversationPayload(conversation.id));
+
   }
 
   public StoreAccessor<Uuid, ConversationHeader> conversationById() {
@@ -124,5 +126,133 @@ public final class Model {
 
   public StoreAccessor<String, Message> messageByText() {
     return messageByText;
+  }
+
+  // methods to handle subscriptions.
+  public void addUserSubscription(User user, UserSub sub){
+    // this method adds a new User Subscription to the subscriptions map.
+    if(!userSubscriptions.containsKey(sub)) {
+        userSubscriptions.put(sub, new HashSet<>());
+    }
+    userSubscriptions.get(sub).add(user);
+  }
+
+  public void addConversationSub(User user, ConvoSub sub){
+    // this method adds a new Conversation Subscription to the subscriptions map.
+    if(!userSubscriptions.containsKey(sub)) {
+        userSubscriptions.put(sub, new HashSet<>());
+    }
+    userSubscriptions.get(sub).add(user);
+  }
+
+  public void removeUserSub(User user, UserSub sub){
+      if(userSubscriptions.get(sub).contains(user)){
+          userSubscriptions.get(sub).remove(user);
+
+      }
+  }
+  public void removeConvoSub(User user, ConvoSub sub){
+      if(userSubscriptions.get(sub).contains(user)){
+          userSubscriptions.get(sub).remove(user);
+      }
+  }
+
+  public HashSet<User> getUsersOfSub(Subscribable sub){
+    if(sub == null){
+      return new HashSet<User>();
+    }
+    else{
+      return userSubscriptions.get(sub);
+    }
+  }
+
+
+  public Subscribable getSubcriptionKey(Subscribable sub){
+    for(Subscribable s: userSubscriptions.keySet()){
+      if (s.getId() == sub.getId()){
+        return s;
+      }
+    }
+    return null;
+  }
+
+  public Subscribable getSubscriptionKeyFromId(Uuid id){
+    for(Subscribable s: userSubscriptions.keySet()){
+      if(s.getId() == id){
+        return s;
+      }
+    }
+    return null;
+  }
+
+  public void update(User user, ConversationHeader conversation){
+    // This updates the subscribers of the user when a new message
+    // has been created from the user.
+
+    // first update the people that are following the user.
+    Subscribable subscription = getSubscriptionKeyFromId(user.id);
+    HashSet<User> users = new HashSet<User>();
+    if(subscription != null){
+      users = getUsersOfSub(subscription);
+      if(users.size() != 0){
+        for(User u: users){
+          // update the subscribers that the user has added a new message to the conversation.
+          String update = ((UserSub) subscription).getUser().name + " has added a new message to conversation " + conversation.title;
+          if(!userUpdates.containsKey(u)){
+            userUpdates.put(u, new HashSet<Update>());
+          }
+          userUpdates.get(u).add(new Update(update));
+          System.out.println("new message added to updates.");
+        }
+      }
+    }
+
+    // now update the people that are following this conversation.
+    subscription = getSubscriptionKeyFromId(conversation.id);
+    if(subscription != null){
+      users = getUsersOfSub(subscription);
+      if(users.size() != 0){
+        for(User u: users){
+          // update the subscribers that this conversation has a new unread message.
+          String update = "Conversation " + ((ConvoSub) subscription).getConversation().title + " has a new unread message";
+          if(!userUpdates.containsKey(u)){
+            userUpdates.put(u, new HashSet<Update>());
+          }
+          userUpdates.get(u).add(new Update(update));
+        }
+      }
+    }
+
+  }
+
+  public void updateNewConversation(User user, ConversationHeader conversation){
+    // this updates the subscribers of the user when a new conversation has been
+    // created by that user.
+    Subscribable subscription = getSubscriptionKeyFromId(user.id);
+    if(subscription != null){
+      HashSet<User> users = getUsersOfSub(subscription);
+      if(users.size() != 0){
+        for(User u: users){
+          String update = "User " + user.name + " has created a new conversation " + conversation.title;
+          if(!userUpdates.containsKey(u)){
+            userUpdates.put(u, new HashSet<Update>());
+          }
+          userUpdates.get(u).add(new Update(update));
+        }
+      }
+    }
+  }
+
+  public HashSet<Update> getUpdates(User user){
+    HashSet<Update> updates = userUpdates.get(user);
+    if(updates != null){
+      return updates;
+    }
+
+    return new HashSet<Update>();
+  }
+
+  public void clearUpdates(User user){
+    userUpdates.get(user).clear();
   }
 }

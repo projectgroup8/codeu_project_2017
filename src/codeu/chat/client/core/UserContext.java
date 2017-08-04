@@ -21,6 +21,8 @@ import codeu.chat.common.BasicController;
 import codeu.chat.common.BasicView;
 import codeu.chat.common.ConversationHeader;
 import codeu.chat.common.User;
+import codeu.chat.common.Update;
+import codeu.chat.util.AccessLevel;
 import codeu.chat.util.Uuid;
 
 public final class UserContext {
@@ -35,8 +37,8 @@ public final class UserContext {
     this.controller = controller;
   }
 
-  public ConversationContext start(String name) {
-    final ConversationHeader conversation = controller.newConversation(name, user.id);
+  public ConversationContext start(String name, AccessLevel defaultAl) {
+    final ConversationHeader conversation = controller.newConversation(name, user.id, defaultAl);
     return conversation == null ?
         null :
         new ConversationContext(user, conversation, view, controller);
@@ -52,5 +54,24 @@ public final class UserContext {
     }
 
     return all;
+  }
+
+  public Iterable<Update> updates() {
+    Collection<Uuid> ids = new ArrayList<>();
+    ids.add(user.id);
+    return view.getUpdates(ids);
+  }
+
+  public void clearUpdates(){
+    controller.clearUpdates(user.id);
+  }
+
+  
+  public void userSubscribe(String name) {
+    controller.newUserSubscription(name, user.id);  
+  }
+
+  public void conversationSubscribe(String title) {
+    controller.newConversationSubscription(title, user.id);
   }
 }

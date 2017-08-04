@@ -14,7 +14,6 @@
 
 package codeu.chat.server;
 
-import java.util.Collection;
 
 import codeu.chat.common.BasicController;
 import codeu.chat.common.ConversationHeader;
@@ -23,15 +22,19 @@ import codeu.chat.common.Message;
 import codeu.chat.common.RandomUuidGenerator;
 import codeu.chat.common.RawController;
 import codeu.chat.common.User;
-import codeu.chat.util.Logger;
-import codeu.chat.util.Time;
-import codeu.chat.util.Uuid;
-import codeu.chat.util.TransactionLogger;
+import codeu.chat.common.UserSub;
+import codeu.chat.common.ConvoSub;
+import codeu.chat.util.*;
+import com.google.gson.Gson;
 
-public final class Controller implements RawController, BasicController {
+import java.util.LinkedList;
+
+    public final class Controller implements RawController, BasicController {
 
   private final static Logger.Log LOG = Logger.newLog(Controller.class);
   private final static TransactionLogger transactionLogger = new TransactionLogger();
+  private final LinkedList<TransactionJson> temporaryLog = new LinkedList<TransactionJson>();
+  private boolean retrieveOn = true;
 
   private final Model model;
   private final Uuid.Generator uuidGenerator;
@@ -52,8 +55,8 @@ public final class Controller implements RawController, BasicController {
   }
 
   @Override
-  public ConversationHeader newConversation(String title, Uuid owner) {
-    return newConversation(createId(), title, owner, Time.now());
+  public ConversationHeader newConversation(String title, Uuid owner, AccessLevel defaultAl) {
+    return newConversation(createId(), title, owner, Time.now(), defaultAl);
   }
 
   @Override
@@ -70,8 +73,11 @@ public final class Controller implements RawController, BasicController {
       model.add(message);
       LOG.info("Message added: %s", message.id);
 
-      transactionLogger.addMessage(conversation, message);
-      transactionLogger.appendToLog();
+      if(!retrieveOn){
+        transactionLogger.addMessage(conversation, message);
+        transactionLogger.appendToLog();
+        model.update(model.userById().first(author), model.conversationById().first(conversation));
+      }
 
       // Find and update the previous "last" message so that it's "next" value
       // will point to the new message.
@@ -120,8 +126,10 @@ public final class Controller implements RawController, BasicController {
           name,
           creationTime);
 
-      transactionLogger.addUser(user);
-      transactionLogger.appendToLog();
+      if(!retrieveOn){
+        transactionLogger.addUser(user);
+        transactionLogger.appendToLog();
+      }
     } else {
 
       LOG.info(
@@ -135,23 +143,91 @@ public final class Controller implements RawController, BasicController {
   }
 
   @Override
-  public ConversationHeader newConversation(Uuid id, String title, Uuid owner, Time creationTime) {
+  public ConversationHeader newConversation(Uuid id, String title, Uuid owner, Time creationTime, AccessLevel defaultAl) {
 
     final User foundOwner = model.userById().first(owner);
 
     ConversationHeader conversation = null;
 
     if (foundOwner != null && isIdFree(id)) {
-      conversation = new ConversationHeader(id, owner, creationTime, title);
+      conversation = new ConversationHeader(id, owner, creationTime, title, defaultAl);
       model.add(conversation);
-
       LOG.info("Conversation added: " + id);
 
-      transactionLogger.addConversation(conversation);
-      transactionLogger.appendToLog();
+      if(!retrieveOn){
+          transactionLogger.addConversation(conversation);
+          transactionLogger.appendToLog();
+          model.updateNewConversation(model.userById().first(owner),conversation);
+      }
     }
 
     return conversation;
+  }
+
+  @Override
+  public void newUserSubscription(String name, Uuid user) {
+    final User subscribingUser = model.userById().first(user); 
+    final UserSub userSub = new UserSub(model.userByText().first(name)); 
+    model.addUserSubscription(subscribingUser, userSub);
+  }
+
+  @Override
+  public void newConversationSubscription(String title, Uuid user) {
+    final User subscribingUser = model.userById().first(user); 
+    final ConvoSub convoSub = new ConvoSub(model.conversationByText().first(title)); 
+    model.addConversationSub(subscribingUser, convoSub);
+  }
+
+  @Override
+  public void addMember(String user, Uuid conversation) {
+    final User u = model.userByText().first(user);
+    final ConversationHeader conversationHeader = model.conversationById().first(conversation);
+
+    AccessLevel level = conversationHeader.getAccessLevel(u);
+
+    if(level.hasMemberAccess()){
+      System.out.println("The user is already a member.");
+    }
+    else if(level.hasOwnerAccess()){
+      System.out.println("You cannot lower an owner's or creator's status.");
+    }
+    else{
+      level.setMemberStatus();
+    }
+  }
+
+  @Override
+  public void addOwner(String user, Uuid conversation) {
+    final User u = model.userByText().first(user);
+    final ConversationHeader conversationHeader = model.conversationById().first(conversation);
+
+    AccessLevel level = conversationHeader.getAccessLevel(u);
+
+    if(level.hasOwnerAccess()){
+      System.out.println("The user already has owner status.");
+    }
+    else if(level.hasCreatorAccess()){
+      System.out.println("You cannot lower a creator's status.");
+    }
+    else{
+      level.setOwnerStatus();
+    }
+  }
+
+  @Override
+  public void defaultAccess(Uuid conversation, AccessLevel defaultAl) {
+    final ConversationHeader conversationHeader = model.conversationById().first(conversation);
+    conversationHeader.defaultAccess = defaultAl;
+
+    if(!retrieveOn){
+      transactionLogger.addDefaultAccess(conversationHeader, defaultAl);
+      transactionLogger.appendToLog();
+    }
+  }
+
+  @Override
+  public void clearUpdates(Uuid user) {
+    model.clearUpdates(model.userById().first(user));
   }
 
   private Uuid createId() {
@@ -178,5 +254,50 @@ public final class Controller implements RawController, BasicController {
   }
 
   private boolean isIdFree(Uuid id) { return !isIdInUse(id); }
+
+  public void saveUser(User user){
+    temporaryLog.add(new UserJson("ADD-USER", user));
+  }
+
+  public void saveConversation(ConversationHeader conversation){
+    temporaryLog.add(new ConversationJson("ADD-CONVERSATION", conversation));
+
+  }
+
+  public void saveMessage(Message message, Uuid conversation){
+    final ConversationPayload foundConversation = model.conversationPayloadById().first(conversation);
+    temporaryLog.add(new MessageJson("ADD-MESSAGE", foundConversation.id, message));
+  }
+
+  public void appendTransactions(){
+    for(TransactionJson json: temporaryLog){
+      Gson gson = new Gson();
+      if (json instanceof UserJson){
+        transactionLogger.log(gson.toJson(((UserJson)json)));
+        transactionLogger.appendToLog();
+      }
+      else if (json instanceof MessageJson){
+        transactionLogger.log(gson.toJson(((MessageJson)json)));
+        transactionLogger.appendToLog();
+      }
+      else if (json instanceof ConversationJson){
+        transactionLogger.log(gson.toJson(((ConversationJson)json)));
+        transactionLogger.appendToLog();
+      }
+    }
+  }
+
+  public boolean isRetrieving(){
+    return retrieveOn;
+  }
+
+  public void deserializeCommands(){
+    retrieveOn = true; // tell the model we're retrieving stuff right now.
+    transactionLogger.readLog(this); // retrieve the data.
+    retrieveOn = false; // tell the model we're done retrieving data.
+    LOG.info("Retrieving data has been completed.");
+    // now append stuff that might've not been appended because the log was being read.
+    appendTransactions();
+  }
 
 }

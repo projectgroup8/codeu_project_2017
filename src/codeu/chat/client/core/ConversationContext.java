@@ -25,6 +25,7 @@ import codeu.chat.common.ConversationPayload;
 import codeu.chat.common.Message;
 import codeu.chat.common.User;
 import codeu.chat.util.Uuid;
+import codeu.chat.util.AccessLevel;
 
 public final class ConversationContext {
 
@@ -87,5 +88,19 @@ public final class ConversationContext {
   private MessageContext getMessage(Uuid id) {
     final Iterator<Message> messages = view.getMessages(Arrays.asList(id)).iterator();
     return messages.hasNext() ? new MessageContext(messages.next(), view) : null;
+  }
+
+  public void addMember(String user, Uuid conversation){
+    controller.addMember(user, conversation);
+
+  }
+
+  public void addOwner(String user, Uuid conversation){
+    controller.addOwner(user, conversation);
+
+  }
+
+  public void defaultAccess(Uuid conversation, AccessLevel defaultAl) {
+    controller.defaultAccess(conversation, defaultAl); 
   }
 }

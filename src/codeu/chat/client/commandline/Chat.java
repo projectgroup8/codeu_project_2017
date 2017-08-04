@@ -21,9 +21,10 @@ import codeu.chat.client.core.Context;
 import codeu.chat.client.core.ConversationContext;
 import codeu.chat.client.core.MessageContext;
 import codeu.chat.client.core.UserContext;
+import codeu.chat.util.AccessLevel;
 import codeu.chat.util.Tokenizer;
-
 import codeu.chat.common.ServerInfo;
+import codeu.chat.common.Update;
 
 public final class Chat {
 
@@ -198,6 +199,7 @@ public final class Chat {
       } 
     });
 
+
     // Now that the panel has all its commands registered, return the panel
     // so that it can be used.
     return panel;
@@ -222,6 +224,12 @@ public final class Chat {
         System.out.println("    Add a new conversation with the given title and join it as the current user.");
         System.out.println("  c-join <title>");
         System.out.println("    Join the conversation as the current user.");
+        System.out.println("  status-update");
+        System.out.println("    Get updates about subscriptions for the current user.");
+        System.out.println("  u-subscribe <name>");
+        System.out.println("    Subscribe to the user with the given name.");
+        System.out.println("  c-subscribe <title>");
+        System.out.println("    Subscribe to the conversation with the given title.");
         System.out.println("  info");
         System.out.println("    Display all info for the current user");
         System.out.println("  back");
@@ -258,7 +266,25 @@ public final class Chat {
       public void invoke(List<String> args) {
         final String name = args.size() > 0 ? args.get(0) : "";
         if (name.length() > 0) {
-          final ConversationContext conversation = user.start(name);
+
+          AccessLevel defaultAl = null;
+          while (defaultAl == null) {
+            Scanner reader = new Scanner(System.in);
+            System.out.println("What is the default access level for this conversation (owner, member, none)?");
+            String resp = reader.next();
+            if (resp.equals("owner")) {
+              defaultAl = new AccessLevel();
+              defaultAl.setOwnerStatus();
+            } else if (resp.equals("member")) {
+              defaultAl = new AccessLevel();
+              defaultAl.setMemberStatus();
+            } else if (resp.equals("none")) {
+              defaultAl = new AccessLevel();
+              defaultAl.setStatus((byte)0b00000000);
+            }
+          }
+
+          final ConversationContext conversation = user.start(name, defaultAl);
           if (conversation == null) {
             System.out.println("ERROR: Failed to create new conversation");
           } else {
@@ -303,6 +329,22 @@ public final class Chat {
       }
     });
 
+    panel.register("status-update", new Panel.Command() {
+      @Override
+      public void invoke(List<String> args) {
+        Iterator<Update> updates = user.updates().iterator();
+        if (!updates.hasNext()) {
+          System.out.println("No updates to be found.");
+        }
+
+        while (updates.hasNext()) {
+          System.out.println(updates.next().getUpdate());
+        }
+        // clear updates here.
+        user.clearUpdates();
+      }
+    });
+
     // INFO
     //
     // Add a command that will print info about the current context when the
@@ -314,6 +356,30 @@ public final class Chat {
         System.out.println("User Info:");
         System.out.format("  Name : %s\n", user.user.name);
         System.out.format("  Id   : UUID:%s\n", user.user.id);
+      }
+    });
+
+    panel.register("u-subscribe", new Panel.Command() {
+      @Override
+      public void invoke(List<String> args) {
+        final String name = args.size() > 0 ? args.get(0) : "";
+        if (name.length() > 0) {
+          user.userSubscribe(name);
+        } else {
+          System.out.println("ERROR: Missing <name>");
+        }
+      }
+    });
+
+    panel.register("c-subscribe", new Panel.Command() {
+      @Override
+      public void invoke(List<String> args) {
+        final String title = args.size() > 0 ? args.get(0) : "";
+        if (title.length() > 0) {
+          user.conversationSubscribe(title);
+        } else {
+          System.out.println("ERROR: Missing <title>");
+        }
       }
     });
 
@@ -339,6 +405,12 @@ public final class Chat {
         System.out.println("    List all messages in the current conversation.");
         System.out.println("  m-add <message>");
         System.out.println("    Add a new message to the current conversation as the current user.");
+        System.out.println("  member-add <user>");
+        System.out.println("    Add a new member to the current conversation.");
+        System.out.println("  owner-add <user>");
+        System.out.println("    Add a new owner to the current conversation.");
+        System.out.println("  default-access <owner|member|none>");
+        System.out.println("    Modify the existing default membership status of the the current conversation.");
         System.out.println("  info");
         System.out.println("    Display all info about the current conversation.");
         System.out.println("  back");
@@ -356,18 +428,23 @@ public final class Chat {
     panel.register("m-list", new Panel.Command() {
       @Override
       public void invoke(List<String> args) {
-        System.out.println("--- start of conversation ---");
-        for (MessageContext message = conversation.firstMessage();
-                            message != null;
-                            message = message.next()) {
-          System.out.println();
-          System.out.format("USER : %s\n", message.message.author);
-          System.out.format("SENT : %s\n", message.message.creation);
-          System.out.println();
-          System.out.println(message.message.content);
-          System.out.println();
+        if(conversation.conversation.getAccessLevel(conversation.user).hasMemberAccess()){
+          System.out.println("--- start of conversation ---");
+          for (MessageContext message = conversation.firstMessage();
+               message != null;
+               message = message.next()) {
+            System.out.println();
+            System.out.format("USER : %s\n", message.message.author);
+            System.out.format("SENT : %s\n", message.message.creation);
+            System.out.println();
+            System.out.println(message.message.content);
+            System.out.println();
+          }
+          System.out.println("---  end of conversation  ---");
         }
-        System.out.println("---  end of conversation  ---");
+        else{
+          System.out.println("You do not have access to view the messages.");
+        }
       }
     });
 
@@ -388,6 +465,86 @@ public final class Chat {
       }
     });
 
+    // MEMBER-ADD (add user)
+    //
+    // Add a command to add a new member to the current conversation when the
+    // user enters "member-add" while on the conversation panel.
+    //
+    panel.register("member-add", new Panel.Command() {
+      @Override
+      public void invoke(List<String> args) {
+        // we first need to check if the user doing the act has the authority.
+        if(conversation.conversation.getAccessLevel(conversation.user).hasOwnerAccess()){
+
+          final String user = args.size() > 0 ? args.get(0) : "";
+          if (user.length() > 0) {
+            conversation.addMember(user, conversation.conversation.id);
+          } else {
+            System.out.println("ERROR: Enter a valid user.");
+          }
+        }
+        else{
+          System.out.println("You do not have the authority to add a new member. "
+                  + "Only owners and creators are allowed to do such action.");
+        }
+      }
+    });
+
+    // OWNER-ADD (add user)
+    //
+    // Add a command to add a new owner to the current conversation when the
+    // user enters "member-add" while on the conversation panel.
+    //
+    panel.register("owner-add", new Panel.Command() {
+      @Override
+      public void invoke(List<String> args) {
+        // we first need to check if the user doing the act has the authority.
+        if(conversation.conversation.getAccessLevel(conversation.user).hasCreatorAccess()){
+
+          final String user = args.size() > 0 ? args.get(0) : "";
+          if (user.length() > 0) {
+            conversation.addOwner(user, conversation.conversation.id);
+          } else {
+            System.out.println("ERROR: Enter a valid user.");
+          }
+        }
+        else{
+          System.out.println("You do not have the authority to add a new owner. "
+                  + "Only creators are allowed to do such action.");
+        }
+      }
+    });
+
+    panel.register("default-access", new Panel.Command() {
+      @Override
+      public void invoke(List<String> args) {
+        // must be a creator to change the default status of a conversation
+        if (conversation.conversation.getAccessLevel(conversation.user).hasCreatorAccess()) {
+          final String status = args.size() > 0 ? args.get(0) : "";
+
+          AccessLevel defaultAl = new AccessLevel();
+
+          if (status.length() > 0) {
+            if (status.equals("owner")) {
+              defaultAl.setOwnerStatus();
+            } else if (status.equals("member")) {
+              defaultAl.setMemberStatus();
+            } else if (status.equals("none")) {
+              defaultAl.setStatus((byte)0b00000000);
+            } else {
+              System.out.println("ERROR: Enter a valid membership status (owner, member, none)");
+            }
+
+            conversation.defaultAccess(conversation.conversation.id, defaultAl);
+          } else {
+            System.out.println("ERROR: Enter a valid membership status (owner, member, none)");
+          }
+        } else {
+          System.out.println("You do not have the authority to set the default membership status. Only Creators are allowed to do such action.");
+        }
+      } 
+    });
+
     // INFO
     //
     // Add a command to print info about the current conversation when the user
@@ -397,9 +554,10 @@ public final class Chat {
       @Override
       public void invoke(List<String> args) {
         System.out.println("Conversation Info:");
-        System.out.format("  Title : %s\n", conversation.conversation.title);
-        System.out.format("  Id    : UUID:%s\n", conversation.conversation.id);
-        System.out.format("  Owner : %s\n", conversation.conversation.owner);
+        System.out.format("  Title         : %s\n", conversation.conversation.title);
+        System.out.format("  Id            : UUID:%s\n", conversation.conversation.id);
+        System.out.format("  Owner         : %s\n", conversation.conversation.owner);
+        System.out.format("  Default Access: %s\n", conversation.conversation.defaultAccess);
       }
     });
 

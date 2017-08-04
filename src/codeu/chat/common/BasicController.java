@@ -14,6 +14,7 @@
 
 package codeu.chat.common;
 
+import codeu.chat.util.AccessLevel;
 import codeu.chat.util.Uuid;
 
 // BASIC CONTROLLER
@@ -49,6 +50,16 @@ public interface BasicController {
   //  operation is successful, a Conversation object will be returned
   //  representing the full state of the conversation on the server.
   //  Whether conversations can have the same title is undefined.
-  ConversationHeader newConversation(String title, Uuid owner);
+  ConversationHeader newConversation(String title, Uuid owner, AccessLevel defaultAl);
 
+  void newUserSubscription(String name, Uuid user);
+
+  void newConversationSubscription(String title, Uuid user);
+
+  void addMember(String user, Uuid conversation);
+  void addOwner(String user, Uuid conversation);
+
+  void defaultAccess(Uuid conversation, AccessLevel defaultAl);
+
+  void clearUpdates(Uuid user);
 }

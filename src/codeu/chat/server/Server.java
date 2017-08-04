@@ -33,12 +33,9 @@ import codeu.chat.common.NetworkCode;
 import codeu.chat.common.Relay;
 import codeu.chat.common.Secret;
 import codeu.chat.common.User;
+import codeu.chat.common.Update;
 import codeu.chat.common.ServerInfo;
-import codeu.chat.util.Logger;
-import codeu.chat.util.Serializers;
-import codeu.chat.util.Time;
-import codeu.chat.util.Timeline;
-import codeu.chat.util.Uuid;
+import codeu.chat.util.*;
 import codeu.chat.util.connections.Connection;
 
 public final class Server {
@@ -84,6 +81,9 @@ public final class Server {
         final String content = Serializers.STRING.read(in);
 
         final Message message = controller.newMessage(author, conversation, content);
+        if(controller.isRetrieving()){
+          controller.saveMessage(message, conversation);
+        }
 
         Serializers.INTEGER.write(out, NetworkCode.NEW_MESSAGE_RESPONSE);
         Serializers.nullable(Message.SERIALIZER).write(out, message);
@@ -102,6 +102,12 @@ public final class Server {
 
         final String name = Serializers.STRING.read(in);
         final User user = controller.newUser(name);
+        if(controller.isRetrieving()){
+          // the user might be adding stuff while the logger is being read.
+          // so we need to temporarly save this new item and then log it when
+          // deserializing is finished.
+          controller.saveUser(user);
+        }
 
         Serializers.INTEGER.write(out, NetworkCode.NEW_USER_RESPONSE);
         Serializers.nullable(User.SERIALIZER).write(out, user);
@@ -115,7 +121,11 @@ public final class Server {
 
         final String title = Serializers.STRING.read(in);
         final Uuid owner = Uuid.SERIALIZER.read(in);
-        final ConversationHeader conversation = controller.newConversation(title, owner);
+        final AccessLevel defaultAl = AccessLevel.SERIALIZER.read(in);
+        final ConversationHeader conversation = controller.newConversation(title, owner, defaultAl);
+        if(controller.isRetrieving()){
+          controller.saveConversation(conversation);
+        }
 
         Serializers.INTEGER.write(out, NetworkCode.NEW_CONVERSATION_RESPONSE);
         Serializers.nullable(ConversationHeader.SERIALIZER).write(out, conversation);
@@ -175,6 +185,79 @@ public final class Server {
       }
     });
 
+    this.commands.put(NetworkCode.GET_UPDATES_BY_ID_REQUEST, new Command() {
+      @Override
+      public void onMessage(InputStream in, OutputStream out) throws IOException {
+        final Collection<Uuid> ids = Serializers.collection(Uuid.SERIALIZER).read(in);
+        final Collection<Update> updates = view.getUpdates(ids);
+
+        Serializers.INTEGER.write(out, NetworkCode.GET_UPDATES_BY_ID_RESPONSE);
+        Serializers.collection(Update.SERIALIZER).write(out,updates);
+      }
+    });
+
+    this.commands.put(NetworkCode.NEW_USER_SUBSCRIPTION_REQUEST,  new Command() {
+      @Override
+      public void onMessage(InputStream in, OutputStream out) throws IOException {
+        final String name = Serializers.STRING.read(in);
+        final Uuid user = Uuid.SERIALIZER.read(in);
+        controller.newUserSubscription(name, user);
+        Serializers.INTEGER.write(out, NetworkCode.NEW_USER_SUBSCRIPTION_RESPONSE);
+      }
+    });
+
+    this.commands.put(NetworkCode.NEW_CONVERSATION_SUBSCRIPTION_REQUEST,  new Command() {
+      @Override
+      public void onMessage(InputStream in, OutputStream out) throws IOException {
+        final String title = Serializers.STRING.read(in);
+        final Uuid user = Uuid.SERIALIZER.read(in);
+        controller.newConversationSubscription(title, user);
+        Serializers.INTEGER.write(out, NetworkCode.NEW_CONVERSATION_SUBSCRIPTION_RESPONSE);
+      }
+    });
+
+    this.commands.put(NetworkCode.CLEAR_UPDATES_REQUEST,  new Command() {
+      @Override
+      public void onMessage(InputStream in, OutputStream out) throws IOException {
+        final Uuid user = Uuid.SERIALIZER.read(in);
+        controller.clearUpdates(user);
+        Serializers.INTEGER.write(out, NetworkCode.CLEAR_UPDATES_RESPOND);
+      }
+    });
+
+    this.commands.put(NetworkCode.ADD_MEMBER_REQUEST,  new Command() {
+      @Override
+      public void onMessage(InputStream in, OutputStream out) throws IOException {
+        final String user = Serializers.STRING.read(in);
+        final Uuid conversation = Uuid.SERIALIZER.read(in);
+        controller.addMember(user, conversation);
+
+        Serializers.INTEGER.write(out, NetworkCode.ADD_MEMBER_RESPONSE);
+      }
+    });
+
+    this.commands.put(NetworkCode.ADD_OWNER_REQUEST,  new Command() {
+      @Override
+      public void onMessage(InputStream in, OutputStream out) throws IOException {
+        final String user = Serializers.STRING.read(in);
+        final Uuid conversation = Uuid.SERIALIZER.read(in);
+        controller.addOwner(user, conversation);
+
+        Serializers.INTEGER.write(out, NetworkCode.ADD_OWNER_RESPOND);
+      }
+    });
+
+    this.commands.put(NetworkCode.DEFAULT_ACCESS_REQUEST, new Command() {
+      @Override
+      public void onMessage(InputStream in, OutputStream out) throws IOException {
+        final Uuid conversation = Uuid.SERIALIZER.read(in);
+        final AccessLevel defaultAl = AccessLevel.SERIALIZER.read(in);
+        controller.defaultAccess(conversation, defaultAl);
+
+        Serializers.INTEGER.write(out, NetworkCode.DEFAULT_ACCESS_RESPOND);
+      }
+    });
+
     this.timeline.scheduleNow(new Runnable() {
       @Override
       public void run() {
@@ -194,6 +277,17 @@ public final class Server {
         }
 
         timeline.scheduleIn(RELAY_REFRESH_MS, this);
+      }
+    });
+  }
+
+  // Reads from the log and executes the commands.
+  public void retrieveState() {
+    timeline.scheduleNow(new Runnable() { // add it to the execution queue.
+      @Override
+      public void run() {
+          LOG.info("Retrieving from last saved state...");
+          controller.deserializeCommands();
       }
     });
   }
@@ -258,10 +352,14 @@ public final class Server {
       // As the relay does not tell us who made the conversation - the first person who
       // has a message in the conversation will get ownership over this server's copy
       // of the conversation.
+      // And default Access will be none
+      AccessLevel defaultAl = new AccessLevel((byte)00000000);
       conversation = controller.newConversation(relayConversation.id(),
                                                 relayConversation.text(),
                                                 user.id,
-                                                relayConversation.time());
+                                                relayConversation.time(),
+                                                defaultAl
+                                                );
     }
 
     Message message = model.messageById().first(relayMessage.id());

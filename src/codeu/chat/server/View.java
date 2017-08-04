@@ -33,6 +33,7 @@ import codeu.chat.common.ConversationPayload;
 import codeu.chat.common.Message;
 import codeu.chat.common.SinglesView;
 import codeu.chat.common.User;
+import codeu.chat.common.Update;
 import codeu.chat.util.Logger;
 import codeu.chat.util.Time;
 import codeu.chat.util.Uuid;
@@ -67,6 +68,11 @@ public final class View implements BasicView, SinglesView {
   @Override
   public Collection<Message> getMessages(Collection<Uuid> ids) {
     return intersect(model.messageById(), ids);
+  }
+
+  @Override
+  public Collection<Update> getUpdates(Collection<Uuid> ids) {
+    return model.getUpdates(findUser(ids.iterator().next()));
   }
 
   @Override
