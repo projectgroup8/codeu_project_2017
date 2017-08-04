@@ -32,6 +32,7 @@ public class TransactionLogger {
 		Gson gson = new Gson();
 		log(gson.toJson(userJson));
 	}
+
 	public void addConversation(ConversationHeader conversation) {
 		ConversationJson conversationJson = new ConversationJson("ADD-CONVERSATION", conversation);
 		System.out.print("Add convo default: ");
@@ -39,6 +40,12 @@ public class TransactionLogger {
 		Gson gson = new Gson();
 		log(gson.toJson(conversationJson));
 	}
+
+  public void addDefaultAccess(ConversationHeader conversation, AccessLevel defaultAl) {
+    DefaultAccessJson defaultAlJson = new DefaultAccessJson("DEFAULT-ACCESS", conversation, defaultAl);
+    Gson gson = new Gson();
+    log(gson.toJson(defaultAlJson));
+  }
 
 	public void addMessage(Uuid conversation, Message message) {
 		MessageJson messageJson = new MessageJson("ADD-MESSAGE", conversation, message);
@@ -78,6 +85,17 @@ public class TransactionLogger {
 			e.printStackTrace();
 		}*/
 	}
+
+  public void retrieveDefaultAccess(Controller controller, JsonObject jsonObject) {
+    try {
+      Uuid conversation = Uuid.parse(jsonObject.get("conversation").getAsString());
+      AccessLevel defaultAl = new AccessLevel(jsonObject.get("defaultAccess").getAsByte());
+
+      controller.defaultAccess(conversation, defaultAl);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
 
 	public void retrieveMessage(Controller controller, JsonObject jsonObject){
 		try {
@@ -143,8 +161,10 @@ public class TransactionLogger {
 						case "ADD-MESSAGE":
 							retrieveMessage(controller, jsonObject);
 							break;
+            case "DEFAULT-ACCESS":
+              retrieveDefaultAccess(controller, jsonObject);
+              break;
 						default: break;
-
 					}
 				}
 			} catch (IOException e) {

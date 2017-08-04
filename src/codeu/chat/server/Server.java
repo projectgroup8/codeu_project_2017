@@ -247,6 +247,17 @@ public final class Server {
       }
     });
 
+    this.commands.put(NetworkCode.DEFAULT_ACCESS_REQUEST, new Command() {
+      @Override
+      public void onMessage(InputStream in, OutputStream out) throws IOException {
+        final Uuid conversation = Uuid.SERIALIZER.read(in);
+        final AccessLevel defaultAl = AccessLevel.SERIALIZER.read(in);
+        controller.defaultAccess(conversation, defaultAl);
+
+        Serializers.INTEGER.write(out, NetworkCode.DEFAULT_ACCESS_RESPOND);
+      }
+    });
+
     this.timeline.scheduleNow(new Runnable() {
       @Override
       public void run() {

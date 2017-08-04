@@ -192,6 +192,25 @@ final class Controller implements BasicController {
   }
 
   @Override
+  public void defaultAccess(Uuid conversation, AccessLevel defaultAl) {
+    try (final Connection connection = source.connect()) {
+      Serializers.INTEGER.write(connection.out(), NetworkCode.DEFAULT_ACCESS_REQUEST);
+      Uuid.SERIALIZER.write(connection.out(), conversation);
+      AccessLevel.SERIALIZER.write(connection.out(), defaultAl);
+      LOG.info("defaultStatus: Request completed.");
+
+      if (Serializers.INTEGER.read(connection.in()) == NetworkCode.DEFAULT_ACCESS_RESPOND) {
+        LOG.info("defaultStatus: Response completed.");
+      } else {
+        LOG.error("Response from server failed.");
+      }
+    } catch (Exception ex) {
+      System.out.println("ERROR: Exception during call on server. Check log for details.");
+      LOG.error(ex, "Exception during call on server.");
+    }
+  }
+
+  @Override
   public void clearUpdates(Uuid user) {
     try (final Connection connection = source.connect()) {
       Serializers.INTEGER.write(connection.out(), NetworkCode.CLEAR_UPDATES_REQUEST);

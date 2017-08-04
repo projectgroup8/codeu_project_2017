@@ -25,6 +25,7 @@ import codeu.chat.common.ConversationPayload;
 import codeu.chat.common.Message;
 import codeu.chat.common.User;
 import codeu.chat.util.Uuid;
+import codeu.chat.util.AccessLevel;
 
 public final class ConversationContext {
 
@@ -97,5 +98,9 @@ public final class ConversationContext {
   public void addOwner(String user, Uuid conversation){
     controller.addOwner(user, conversation);
 
+  }
+
+  public void defaultAccess(Uuid conversation, AccessLevel defaultAl) {
+    controller.defaultAccess(conversation, defaultAl); 
   }
 }
