@@ -49,5 +49,7 @@ public final class NetworkCode {
       ADD_MEMBER_REQUEST = 41,
       ADD_MEMBER_RESPONSE = 42,
       ADD_OWNER_REQUEST = 43,
-      ADD_OWNER_RESPOND = 44;
+      ADD_OWNER_RESPOND = 44,
+      DEFAULT_ACCESS_REQUEST = 45,
+      DEFAULT_ACCESS_RESPOND = 46;
 }

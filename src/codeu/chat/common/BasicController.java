@@ -59,5 +59,7 @@ public interface BasicController {
   void addMember(String user, Uuid conversation);
   void addOwner(String user, Uuid conversation);
 
+  void defaultAccess(Uuid conversation, AccessLevel defaultAl);
+
   void clearUpdates(Uuid user);
 }
