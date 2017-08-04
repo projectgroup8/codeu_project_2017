@@ -215,6 +215,17 @@ import java.util.LinkedList;
   }
 
   @Override
+  public void defaultAccess(Uuid conversation, AccessLevel defaultAl) {
+    final ConversationHeader conversationHeader = model.conversationById().first(conversation);
+    conversationHeader.defaultAccess = defaultAl;
+
+    if(!retrieveOn){
+      transactionLogger.addDefaultAccess(conversationHeader, defaultAl);
+      transactionLogger.appendToLog();
+    }
+  }
+
+  @Override
   public void clearUpdates(Uuid user) {
     model.clearUpdates(model.userById().first(user));
   }

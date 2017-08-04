@@ -409,6 +409,8 @@ public final class Chat {
         System.out.println("    Add a new member to the current conversation.");
         System.out.println("  owner-add <user>");
         System.out.println("    Add a new owner to the current conversation.");
+        System.out.println("  default-access <owner|member|none>");
+        System.out.println("    Modify the existing default membership status of the the current conversation.");
         System.out.println("  info");
         System.out.println("    Display all info about the current conversation.");
         System.out.println("  back");
@@ -513,6 +515,36 @@ public final class Chat {
       }
     });
 
+    panel.register("default-access", new Panel.Command() {
+      @Override
+      public void invoke(List<String> args) {
+        // must be a creator to change the default status of a conversation
+        if (conversation.conversation.getAccessLevel(conversation.user).hasCreatorAccess()) {
+          final String status = args.size() > 0 ? args.get(0) : "";
+
+          AccessLevel defaultAl = new AccessLevel();
+
+          if (status.length() > 0) {
+            if (status.equals("owner")) {
+              defaultAl.setOwnerStatus();
+            } else if (status.equals("member")) {
+              defaultAl.setMemberStatus();
+            } else if (status.equals("none")) {
+              defaultAl.setStatus((byte)0b00000000);
+            } else {
+              System.out.println("ERROR: Enter a valid membership status (owner, member, none)");
+            }
+
+            conversation.defaultAccess(conversation.conversation.id, defaultAl);
+          } else {
+            System.out.println("ERROR: Enter a valid membership status (owner, member, none)");
+          }
+        } else {
+          System.out.println("You do not have the authority to set the default membership status. Only Creators are allowed to do such action.");
+        }
+      } 
+    });
+
     // INFO
     //
     // Add a command to print info about the current conversation when the user
@@ -522,9 +554,10 @@ public final class Chat {
       @Override
       public void invoke(List<String> args) {
         System.out.println("Conversation Info:");
-        System.out.format("  Title : %s\n", conversation.conversation.title);
-        System.out.format("  Id    : UUID:%s\n", conversation.conversation.id);
-        System.out.format("  Owner : %s\n", conversation.conversation.owner);
+        System.out.format("  Title         : %s\n", conversation.conversation.title);
+        System.out.format("  Id            : UUID:%s\n", conversation.conversation.id);
+        System.out.format("  Owner         : %s\n", conversation.conversation.owner);
+        System.out.format("  Default Access: %s\n", conversation.conversation.defaultAccess);
       }
     });
 

@@ -54,7 +54,7 @@ public final class ConversationHeader {
   public final Uuid owner;
   public final Time creation;
   public final String title;
-  public final AccessLevel defaultAccess;
+  public AccessLevel defaultAccess;
   public final HashMap<Uuid, AccessLevel> accessByUser;
 
   public ConversationHeader(Uuid id, Uuid owner, Time creation, String title, AccessLevel defaultAccess) {
